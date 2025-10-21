@@ -1,7 +1,7 @@
 ---
 name: 'Event Plan'
 about: For PostHog team to organize events
-title: 'Event: [City or Event Name]'
+title: '[Event] - Event Name Here '
 labels: [marketing]
 assignees: 'Assign yourself, Daniel Zaltsman'
 ---
