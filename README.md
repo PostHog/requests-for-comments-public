@@ -1,4 +1,4 @@
-# PostHog/meta
+# PostHog/requests-for-comments
 
 This is a place to discuss non-product issues in public.
 
