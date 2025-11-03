@@ -1,76 +1,67 @@
 ---
-name: 'Launch Plan'
+name: "Launch Plan"
 about: For planning marketing launches and product announcements.
-title: 'Launch Plan: [Product Name]'
+title: "Launch Plan: [Product Name]"
 labels: marketing
 assignees:
-    - joethreepwood
-    - PostHog/team-billing
+  - PostHog/team-billing
 ---
 
-_Start by saying what is launching, when and who is involved._
+[PRODUCT NAME] is launching on [MONTH AND DAY]
 
-## Best practices
+Tag relevant owners here: 
 
--   Ensure the product has at least one customer story within 3 weeks of launch
--   Ensure we publish best practice content for the product and link to it from docs
--   Ensure that products have at least one pre-made template (or similar) for users
--   Ensure the product has at least one tutorial at launch
--   Ensure the product has a robust docs page, and product page if needed
--   Ensure the product is added to email and in-app onboarding flows
+Team lead: [@handle]
+Product Marketer (PMM): [@handle] 
+Billing Lead: [@handle] 
+Blitzscale: [@handle]
+
+## Marking best practices
+- Have ≥1 customer story within 3 weeks of launch
+- Publish a best-practices guide and link it from docs
+- Ship at least one ready-to-use template (or similar)
+- Publish at least one tutorial at launch
+- Complete robust docs (and product page if needed)
+- Add to email + in-app onboarding flows
+
+<!-- PMM is the default fallback for marketing tasks if a specific PMM isn’t assigned. -->
 
 ## Launch plan
+_Keep this list current. Link PRs/issues and assign owners._
+_PMM should take the lead on adding additional marketing activities_
 
-_Keep this list updated with current plans. Add linked PRs and issues, and assign people ASAP._
+### Before launch
+- [ ] Finalize pricing RFC — _Team lead_ ([template](https://github.com/PostHog/billing/blob/main/notes/pricing-rfc.md))
+- [ ] Create Slack channel **#<product>-launch** with all owners — _PMM_
+- [ ] Find a case-study customer — _PMM_
+- [ ] Draft content and brief website team - _PMM_
+- [ ] Confirm docs are ready — _Docs team_
+- [ ] Define [product intent](https://posthog.com/handbook/growth/growth-engineering/product-intents) and [activation criteria](https://posthog.com/handbook/growth/growth-engineering/per-product-activation) - _Team lead & PMM_
+- [ ] Draft content and brief website team - _PMM_
+- [ ] Decide beta reward — _Team lead & PMM_
+- [ ] Add email onboarding content and adjust marketing flows - _PMM_
 
-### Before launch - Deadline: [DATE]
+### Launch day
+- [ ] Merge any remaining PRs — _PMM_
+- [ ] Enable feature flag for all users — _Team lead_
+- [ ] Disable beta feedback emails — _PMM_
+- [ ] Create a dedicated channel to centralize support - _PMM_
+- [ ] Release website product page — @corywatilo 
+- [ ] Make homepage and nav updates — @corywatilo
+- [ ] Release in-app onboarding — _Team lead_
+- [ ] Internal announcement for Sales & Ads teams - _PMM_
 
-<!-- Add / Remove tasks below depending on your needs. -->
+### Follow-on
+- [ ] Remove early-access feature & flag — _Team lead_
+- [ ] Migrate users and delete beta plans — @PostHog/team-billing
+- [ ] Funnel Zendesk tickets to created Slack channel — _PMM_
 
--   [ ] Create a Slack channel called #{product-name}-launch - _team lead_
-    -   Add @PostHog/{team-name} @joethreepwood, @PostHog/team-billing and the relevant exec
--   [ ] Find a case study customer for @joethreepwood - _team lead_
--   [ ] Ensure docs are up to snuff - @ivanagas
--   [ ] (Optional) Decide a reward for beta users - @joethreepwood, @PostHog/team-billing and _team lead_
-    -   Note: one month free usage is plenty generous
+#### Billing changes
+- [ ] Set up plans in Stripe — @PostHog/team-billing
+- [ ] Create plans in billing — _team lead_ ([example](https://github.com/PostHog/billing/pull/1186))
+- [ ] Usage report PR — _team lead_ ([example](https://github.com/PostHog/posthog/pull/28313))
+- [ ] Quota limiting PR — _team lead_ ([example](https://github.com/PostHog/posthog/pull/30459))
+- [ ] Pricing calculator (site) — _team lead_ ([example](https://github.com/PostHog/posthog.com/pull/11143))
 
-#### (Optional) Product
-
-<!-- Remove this section if you are not launching an entirely new product. -->
-
--   [In-app onboarding]() ([example](https://github.com/PostHog/posthog/pull/30071)) - _team lead_
--   [Product intents]() ([example](https://github.com/PostHog/posthog/pull/30099)) - _team lead_
--   [Website product page]() ([example](https://github.com/PostHog/posthog.com/pull/10988)) - @joethreepwood or @corywatilo
--   [Homepage]() ([example](https://github.com/PostHog/posthog.com/pull/11215)) - @joethreepwood
-
-#### Pricing
-
-<!-- Remove this section if you are not charging for the product. -->
-
--   [ ] [Write a pricing RFC]() [template](https://github.com/PostHog/billing/blob/main/notes/pricing-rfc.md) - _team lead_
-    -   Model plans ([template](https://docs.google.com/spreadsheets/d/1Ue4qlfGyEz8EmwDIgB4ro2e9LLRoxM40lXTFA8ZLFXg))
--   [ ] Setup plans in Stripe - @PostHog/team-billing
--   [ ] Create plans in billing ([example](https://github.com/PostHog/billing/pull/1186)) - _team lead_
--   [ ] [Usage report]() ([example](https://github.com/PostHog/posthog/pull/28313)) - _team lead_
--   [ ] [Quota limiting]() ([example](https://github.com/PostHog/posthog/pull/30459)) - _team lead_
--   [ ] [Pricing calculator]() ([example](https://github.com/PostHog/posthog.com/pull/11143)) - _team lead_
-
-### Launch day - Deadline: [DATE]
-
-<!-- Add / Remove tasks below depending on your needs. -->
-
--   [ ] Merge any remaining PRs - _team lead_
--   [ ] Enable feature flag for all - _team lead_
--   [ ] Disable beta feedback emails - @joethreepwood
-
-### Follow-on activity
-
--   [ ] Delete early access feature (& flag) - _team lead_
--   [ ] Move everyone over and delete the beta plans - @PostHog/team-billing
--   [ ] Reach out to #team-support to get them involved in triaging tickets - _team lead_
-
-## Feedback and other ideas
-
-All feedback and additional ideas from @marketing is appreciated.
-
-_You can add additional out-there ideas here_.
+## Feedback & ideas
+Marketing feedback and extra ideas welcome. Drop anything “out-there” below.
