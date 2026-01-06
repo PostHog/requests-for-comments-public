@@ -124,3 +124,7 @@ Then, I suggest we sign up for their free trial and run a pilot with an Engineer
 - Customizing Promptless with our style guide and docs site customizations
 - Implement Promptless for an Engineering team, and have them give use feedback on whether Promptless's first drafts are technically sound, and if they like the new workflow
 - Test screenshot capture and push it to its limits
+
+## Alternate vendors and solutions
+
+TBD
