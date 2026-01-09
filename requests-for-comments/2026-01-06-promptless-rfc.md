@@ -118,6 +118,10 @@ We have a demo scheduled for Friday January 9th. I have a list of questions I ne
 - How does this work with custom docs platforms?
 - What’s on the roadmap for more docs testing/docs maintenance features? Specifically for code snippet validation (syntax, functionality, etc.) and SDK/API references?
 - What's included in a custom plan? What's the actual cost for 842 pages?
+- Where is our code and documentation processed and stored? What's the retention policy? Is data used to train your AI models?
+- What control over data residency do we have?
+- What's your SOC 2/compliance status?
+- How does your platform compare to competitors such as Dosu?
 
 Then, I suggest we sign up for their free trial and run a pilot with an Engineering team. Their free trial gives us access to Promptless for 200 pages. We should test:
 
@@ -127,4 +131,52 @@ Then, I suggest we sign up for their free trial and run a pilot with an Engineer
 
 ## Alternate vendors and solutions
 
-TBD
+Promptless is currently the most faeture-rich options for our workflow and needs. However, it still doesn't fulfill the vision of a full docs health monitoring ecosystem. So, I've broekn down some alternatives and DIY approaches we could take!
+
+### Direct competitors to Promptless
+
+There are a few platforms out there that are similar:
+
+| Platform | What it does | Strengths | Concerns for us | Pricing |
+|----------|--------------|-----------|-----------------|---------|
+| [Dosu](https://dosu.dev/) | Detects merged PRs, finds related docs, auto-updates, posts summary on PR | 50k+ GitHub installs, some pretty notable customers (Prisma, Strapi, LangChain), side note: I do know the CEO/could get us a solid demo | Security/SOC 2 status unconfirmed, less features than Promptless | Open source option, self service additional pricing, maybe lower costs |
+| [Swimm](https://swimm.io/) | Code-coupled docs with patented auto-sync algorithm | Best security posture of all of them: SOC 2 Type II + ISO 27001, self-hosting available, bring your own LLM | Focused more for internal engineering docs, recently pivoted to legacy code modernization, so I don't know how much goes into their docs features | Pricing based on number of lines of code (feel like this would add up crazy fast) |
+| [Qodo](https://www.qodo.ai/) | `/add_docs` command auto-generates docs on PRs | Mainly a code review tool, not a docs tool (think: Greptile) | Docs is a secondary feature | Pricing based per user w/ credit limits |
+
+The competitive landscape here is small. Dosu is the closest to Promptless in functionality, but lacks some features like screenshot maintenance. It could be worth a demo if pricing is more favorable though, and gives us a foundation to at least meet the demand of engineering updates!
+
+### Building in-house
+
+We have strict security requirements and a custom docs site built on Gatsby. DIY-ing parts of this is inevitable, because none of these platforms provide full functionality for what we want. Here's what building might look like:
+
+| Feature | What it does | What we need | Effort |
+|---------|--------------|--------------|--------|
+| PR-triggered docs drafting | Detects code PRs that need docs, drafts updates, creates docs PR | GHA, Claude API, Vector database, Prompt templates | 2 weeks |
+| Screenshot automation | Compare screenshots in docs to current app UI, alerts when stale, retakes and queues for review | Playwright, Visual regression tool, Screenshot manifest, GHA, review workflow | 2-3 weeks for basic version, 3-4 weeks for something more mature |
+| Slack integration | Monitors Slack channels for questions/discussions that should become docs, drafts content, notifies team | Slack app, Claude API, trigger logic, notification workflow | 1 week or less |
+| Zendesk integration | Detects patterns in support tickets that should become docs/FAQs, drafts content | Zendesk webhook, Claude API, pattern detection | We already have some of this built, so 1 week to hook it up to GitHub |
+
+The total effort here would be ~6-8 weeks, plus ongoing maintenance for prompt tuning, screenshot manifest updates, and edge cases. It's very possible we could build the capabilities of Promptless or Dosu in-house, and better.
+
+## When it makes sense to build vs. buy here
+
+Buy if:
+
+- Speed to value matters MOST, more than customization and flexibility
+- We need something working tomorrow, not weeks from now
+- Maintenance capability is limited (as it is right now)
+
+Build if:
+
+- We have concerns over data privacy
+- We have the capacity to dedicate 6-8 weeks to the project
+- Our docs workflow proves too complicated for Promptless/Dosu
+- We've scaled so much that SaaS pricing is monsterous
+
+But there's one more solution: hybrid. This might look like:
+
+- Buy Promptless or Dosu for PR drafting, Slack integration
+- Build screenshot monitoring workflow if we don't go with a vendor that has it (Dosu for example)
+- Own templates, linting, Vale rules, site ergonomics (as we should)
+
+A hybrid approach can get us speed where it matters most. And a hybrid approach at this point, is my recommendation. Let's keep our costs low with whatever vendor we go with, and build the capabilities that extend it into a more powerful ecosystem ourselves.
