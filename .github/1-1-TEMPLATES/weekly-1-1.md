@@ -8,16 +8,16 @@ _Every ~6 months, you should swap your regular 1-1 out for a [career development
 
 **[Team member name] agenda**
 
-- What are the most important things for you right now?
-- What does great look like this week?
-- What should we prioritize in our discussion today?
-  
+-   What are the most important things for you right now?
+-   What does great look like this week?
+-   What should we prioritize in our discussion today?
+
 **[Manager name] agenda**
 
-- What are the most important things for you right now?
-- What does great look like this week?
-- What should we prioritize in our discussion today?
+-   What are the most important things for you right now?
+-   What does great look like this week?
+-   What should we prioritize in our discussion today?
 
 **What we talked about**
 
-- Add any notes here, including actions to take
+-   Add any notes here, including actions to take
