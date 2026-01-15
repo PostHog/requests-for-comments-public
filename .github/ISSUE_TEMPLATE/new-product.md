@@ -36,6 +36,7 @@ Beta implies you wanna let all the users who wanted to opt-in to your product
 -   [ ] Ensure your roadmap item has a payload with the `ProductKey` you defined in your `manifest.tsx` file: `{ "product_intent": "your_product_key" }` or else people won't see your product in their sidebar
 -   [ ] Move your roadmap item from `concept` to `beta`
 -   [ ] Inform the marketing teams a new beta is available via the `#team-marketing` channel
+-   [ ] Let `#team-growth` know about the move to get your product added to user's sidebars - product should be added to everyone who already has a product from the same category as the new product in their own sidebar
 
 ## Launching a new product (GA)
 
