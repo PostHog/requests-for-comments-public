@@ -18,19 +18,21 @@ We have a couple of potential issues with our capture service:
 In the capture pods we should simply write the events to disk and return a 200 immediately, then asynchronously persist them to Kafka.
 
 Pros:
+
 1. Massively reduced latency - under 10ms P50 easily
 2. No Single Point of Failure
-   - if Kafka is down we still write events. Each pod can have a disk large enough for e.g. an hours worth of traffic, giving us time to spin up an MSK cluster, or warpstream, or whatever we can to fix things.
-   - short-lived blips in Kafka are invisible to the user. e.g. patching, or a warpstream pod dying etc.
+    - if Kafka is down we still write events. Each pod can have a disk large enough for e.g. an hours worth of traffic, giving us time to spin up an MSK cluster, or warpstream, or whatever we can to fix things.
+    - short-lived blips in Kafka are invisible to the user. e.g. patching, or a warpstream pod dying etc.
 
 Cons:
+
 1. Durability - durability will necessarily be reduced. There is _some_ chance of a disk failure that would lead to events we have confirmed being lost. This is extremely unlikely as disks are constantly being flushed, but it is possible. We could potentially use RAID to mitigate this.
 2. Ordering - we can no longer guarantee ordering between 2 events that are sent in quick succession. A client could receive a 200 from capture, send a followup event, receive a 200 but from a different pod. These could flush out of order
 3. Complexity - it's another piece of capture that can go wrong, and we need to deal with things like events getting confirmed to sqlite but failing to write to Kafka - we could have these events persisted and then debug manually at a later date.
 
 ## Proposed Architecture
 
-![Proposed Architecture](./images/capture-to-disk-architecture.png)
+![Proposed Architecture](/images/2025-02-20-capture-to-disk/capture-to-disk-architecture.png)
 
 I propose we add a sqlite layer to the capture service (open to other data stores, but sqlite is solid and easy to work with).
 
@@ -48,7 +50,7 @@ One thing we could do to improve ordering is to add a reordering step - this wou
 
 The trade off is that of course we add 20 seconds of end to end lag to the pipeline.
 
-![Reordering step](./images/capture-to-disk-reordering.png)
+![Reordering step](/images/2025-02-20-capture-to-disk/capture-to-disk-reordering.png)
 
 ## Alternatives considered
 
