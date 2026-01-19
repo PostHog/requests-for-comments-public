@@ -1,6 +1,6 @@
 # Automating docs contributions with AI
 
-> **Decision:** Run pilot with Inkeep Content Writer (February 2026)
+> **Decision:** Moving forward with Inkeep Content Writer pilot. See the [Inkeep pilot RFC](https://github.com/PostHog/requests-for-comments-internal/pull/967) for details.
 
 ## The problem
 
@@ -160,7 +160,7 @@ We ran a 30-day PR replay, scoped to `content/docs` only to avoid overwhelming t
 6. Promptless suggestions were too targeted and didn't follow our information architecture
 7. Promptless's product just felt a lot less mature in terms of using the product, and the results
 
-See the [Inkeep pilot RFC] for pilot details, timeline, and approval process.
+See the [Inkeep pilot RFC](https://github.com/PostHog/requests-for-comments-internal/pull/967) for pilot details, timeline, and approval process.
 
 ## Other vendors considered
 
