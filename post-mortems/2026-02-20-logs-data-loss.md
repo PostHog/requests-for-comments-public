@@ -4,11 +4,15 @@ On February 19th, PostHog's Logs ClickHouse database experienced a bug which cau
 
 ## Summary
 
-For PostHog's new Logs product, we store data in a ClickHouse cluster. When we started the Logs a few months ago we made the decision to run Logs on its own ClickHouse cluster instead of adding it to our main ClickHouse cluster where we store analytics events and other PostHog data. This was so that we could move quicker, use later versions, and optimise the database for Logs specific access patterns, as well as isolating the impact of bugs or load between different products
+As with most queryable data in PostHog, we store data for Logs in a ClickHouse cluster. When we started building Logs, we decided to use a new, dedicated cluster, rather than building it on top of our main ClickHouse cluster, which is shared across most other PostHog products. This had a few advantages, allowing us to:
+-  iterate faster without cross-team or organisational risk
+- use later database versions without time consuming backwards compatibility testing
+- optimise the cluster for Logs specific access patterns
+-  isolate our other product from the impact of bugs or load from logs, a very high-data-volume system
 
-This new cluster uses S3 disks in ClickHouse and data parts are automatically uploaded to S3 after 24 hours - this is to allow us to scale to the enormous amount of volume required for Logs, our own internal log consumption is over 500MB/s, or about 1PB/month (compressed it's about ~100TB/month)
+This new cluster uses S3 disks in ClickHouse, with data parts being automatically uploaded to S3 after 24 hours - this is what enables us to handle the significant data volume required for Logs (in PostHog, we alone produce about 500MB/s of logs from across our systems, or about 1PB/month uncompressed).
 
-A bug in ClickHouse caused it to unexpectedly start deleting almost all of the data parts in S3. The database is replicated with two replicas, however very early on in the project we had set "Zero Copy Replication" on in the cluster. This is an experimental feature that ClickHouse do not recommend in production, for exactly this reason: A bug that should have caused a single replica to be deleted instead deleted the data for both replicas.
+A bug in ClickHouse caused it to unexpectedly attempt to delete almost all of the data parts in S3. The Logs database is replicated, with two replicas, however very early on in the project we had enabled "Zero Copy Replication" in the Logs cluster nodes. This is an experimental feature that ClickHouse **does not recommend** in production, for exactly this reason: a bug that should have caused a single replica to be deleted instead deleted the data everywhere.
 
 ## Timeline
 
@@ -32,7 +36,7 @@ The decision to use zero-copy replication was taken extremely early in the Logs 
 
 Once Logs was released to external users this decision should have been revisited, but wasn't. Due to experiencing no issues at all during several months of internal usage, settings that had been set at the beginning were largely unvisited and unchanged.
 
-Zero-copy replication has been largely unmaintained for the last 4 years and still contains critical bugs, which includes deleting the entire database erroneously. Because Zero Copy replication utilizes a shared storage medium (S3) for multiple replicas, when the logic on one node failed and issued delete commands for the underlying S3 objects, those files were removed for the entire cluster immediately. There was no redundancy layer between the database application logic and the storage layer.
+Zero-copy replication has been largely unmaintained for the last 4 years, and still contains critical bugs, including the one we hit here. Because Zero Copy replication uses a shared storage medium (S3) for multiple replicas, when the logic on one node failed and issued delete commands for the underlying S3 objects, those files were removed for the entire cluster immediately. There was no redundancy layer between the database application logic and the storage layer.
 
 ### Lack of Detection
 
@@ -42,7 +46,7 @@ We lacked specific monitoring for the integrity of "cold" data stored in S3. Our
 
 ### What Went Well
 
-*   **Service Isolation:** The decision to host the Logs product on a completely separate ClickHouse cluster from the main Analytics product was validated. Despite the severity of this incident, our core Product Analytics and Session Replay features remained 100% unaffected.
+*   **Service Isolation:** Despite the severity of this incident, all other products and features were completely unaffected. Our decision to isolate the logs product massively reduced the blast radius of this incident.
 *   **Kafka Retention Strategy:** Configuring Kafka with 3 days of retention saved us from total data loss for recent activity.
 
 ### What Went Poorly
