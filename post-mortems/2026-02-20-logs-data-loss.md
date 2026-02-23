@@ -1,6 +1,6 @@
 # PostHog Logs Data Loss - February 20, 2026
 
-On February 19th, PostHog's Logs ClickHouse database experienced a bug which caused it to delete a significant proportion of our Logs Product data in our US Cloud region
+On February 19th, PostHog's Logs product experienced a major incident, which caused the loss of data collected more than 3 days ago in our US region. This data loss only impacted the Logs product, all other PostHog data is intact.
 
 ## Summary
 
