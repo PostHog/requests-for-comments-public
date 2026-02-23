@@ -59,4 +59,4 @@ We lacked specific monitoring for the integrity of "cold" data stored in S3. Our
 
 1.  **Immediate Configuration Audit:** Disable Zero Copy Replication on all clusters immediately. Conduct a full audit of the Logs ClickHouse configuration and ensure no experimental features are used in production.
 2.  **Implement S3 Object Protection:** Enable S3 Versioning on the underlying storage buckets. This ensures that even if the database application issues a destructive command due to a bug, the underlying data objects can be recovered.
-3.
+3. Before a product is made Generally Available, we spot check configurations and our data integrity strategies to find and correct for potential single points of failure
