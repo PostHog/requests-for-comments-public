@@ -26,6 +26,7 @@ Blitzscale: [@handle]
 -   Publish at least one tutorial at launch
 -   Complete robust docs (and product page if needed)
 -   Add to email + in-app onboarding flows
+-   For new products, create a sales enablement sheet
 
 <!-- PMM is the default fallback for marketing tasks if a specific PMM isn’t assigned. -->
 
@@ -44,7 +45,8 @@ _PMM should take the lead on adding additional marketing activities_
 -   [ ] Define [product intent](https://posthog.com/handbook/growth/growth-engineering/product-intents) and [activation criteria](https://posthog.com/handbook/growth/growth-engineering/per-product-activation) - _Team lead & PMM_
 -   [ ] Draft content and brief website team - _PMM_
 -   [ ] Decide beta reward — _Team lead & PMM_
--   [ ] Add email onboarding content and adjust marketing flows - _PMM_
+-   [ ] For new products: Add email onboarding content and adjust marketing flows - _PMM_
+-   [ ] For new products: Create a sales enablement docs and add it to the handbook (example) - _PMM_
 
 ### Launch day
 
