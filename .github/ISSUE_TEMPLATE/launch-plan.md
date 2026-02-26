@@ -46,7 +46,7 @@ _PMM should take the lead on adding additional marketing activities_
 -   [ ] Draft content and brief website team - _PMM_
 -   [ ] Decide beta reward — _Team lead & PMM_
 -   [ ] For new products: Add email onboarding content and adjust marketing flows - _PMM_
--   [ ] For new products: Create a sales enablement and add to [the repo](https://github.com/PostHog/sales-enablement) - _PMM_
+-   [ ] For new products: Create a sales enablement and add to GTM academy - _PMM_
 
 ### Launch day
 
