@@ -75,6 +75,7 @@ _PMM should take the lead on adding additional marketing activities_
 -   [ ] Usage report PR — _team lead_ ([example](https://github.com/PostHog/posthog/pull/28313))
 -   [ ] Quota limiting PR — _team lead_ ([example](https://github.com/PostHog/posthog/pull/30459))
 -   [ ] Pricing calculator (site) — _team lead_ ([example](https://github.com/PostHog/posthog.com/pull/11143))
+-   [ ] Set up product and tax codes on Anrok — @PostHog/team-people-and-ops
 
 ## Feedback & ideas
 
