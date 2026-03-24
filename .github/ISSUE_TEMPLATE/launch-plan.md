@@ -76,6 +76,7 @@ _PMM should take the lead on adding additional marketing activities_
 -   [ ] Quota limiting PR — _team lead_ ([example](https://github.com/PostHog/posthog/pull/30459))
 -   [ ] Pricing calculator (site) — _team lead_ ([example](https://github.com/PostHog/posthog.com/pull/11143))
 -   [ ] Set up product and tax codes on Anrok — @PostHog/team-people-and-ops
+-   [ ] Add product usage/engagement/mrr tracking to Vitally - @PostHog/team-billing
 
 ## Feedback & ideas
 
