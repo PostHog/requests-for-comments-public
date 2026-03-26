@@ -56,6 +56,8 @@ _PMM should take the lead on adding additional marketing activities_
 -   [ ] Create a dedicated channel to centralize support - _PMM_
 -   [ ] Release website product page — @corywatilo
 -   [ ] Make homepage and nav updates — @corywatilo
+-   [ ] Publish announcement on blog if needed - _PMM_
+-   [ ] Also publish the blogpost on X as a native article - _PMM_
 -   [ ] Release in-app onboarding — _Team lead_
 -   [ ] Internal announcement for Sales & Ads teams - _PMM_
 -   [ ] Ask `#team-growth` to add an ad inside the app to let people know about the product launch - _PMM_
