@@ -39,6 +39,7 @@ _PMM should take the lead on adding additional marketing activities_
 
 -   [ ] Finalize pricing RFC — _Team lead_ ([template](https://github.com/PostHog/billing/blob/main/notes/pricing-rfc.md))
 -   [ ] Create Slack channel **#<product>-launch** with all owners — _PMM_
+-   [ ] If needed, create a taskforce for setting a release date. This should be limited to the PMM, PM, and product Team Lead. - _PMM_
 -   [ ] Find a case-study customer — _PMM_
 -   [ ] Draft content and brief website team - _PMM_
 -   [ ] Confirm docs are ready — _Docs team_
