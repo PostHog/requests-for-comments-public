@@ -21,6 +21,8 @@ The wizard is built on the Claude Agent SDK. Here's the flow as implemented in `
 
 ![Wizard flow](/images/2026-04-01-wizard-web-communication/wizard-flow.png)
 
+Once the agent starts, it runs a single query. We hook into it to push state to CLI TUI. There is no input mechanism and the app is entirely controlled by the agent.
+
 ### What we already have
 
 **`WizardSession`** (`src/lib/wizard-session.ts`) — tracks everything: `RunPhase` (Idle/Running/Completed/Error), integration, credentials, framework context, discovered features, MCP outcome, health check results, outro data. This is the state we want to push.
