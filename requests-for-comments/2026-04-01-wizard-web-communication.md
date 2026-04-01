@@ -1,5 +1,7 @@
 # Request for comments: PostHog Wizard CLI → Web App Communication
 
+**Decision maker:** Vincent Ge
+
 ## Problem statement
 
 We're pushing the Wizard (`npx @posthog/wizard`) to become the default entry point for PostHog onboarding. It detects the framework, authenticates via OAuth, runs a Claude agent that installs the SDK and modifies code using MCP skills, optionally installs the PostHog MCP server into editor clients, and reports success.
@@ -106,8 +108,11 @@ I think we can start a V1, where as the user runs the wizard, we sync the state 
 
 ## Potential future work
 
+The Wizard basically lets you do what ever you want to the user's code base. Once we have this V1, we can build so many more cool things. I'm inviting you all to think about the growth levers you'd like to build into this.
+
 The Wizard needs a pretty good round of refactoring before we can really start messing with its behavior, especially with more input from the web app. But when that's possible, there are many super cool things we can do:
 
+- **Migrations**: If they set up Product Analytics, and we detect they're using a competitor for feature flags, we can 1:1 migrate them. In the web app we can show them how much they'd save if they mirgate. If they would like to try, we can just do it.
 - **Two-way communication** — The wizard could poll the web app for commands, or the web app could push commands to the wizard. This would allow the wizard to wait for user input, or to be paused and resumed by the web app.
   - Example 1: On web, the user can tweak which events to instrument, what they look like, which insights and dashboards to create, etc.
   - Example 2: On web, if the user configures remote proxies or makes other config suggestions, we can sync this to the wizard. Maybe via polling.
