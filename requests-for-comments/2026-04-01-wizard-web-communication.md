@@ -71,7 +71,8 @@ export enum TaskStatus {
   Pending = 'pending',
   InProgress = 'in_progress',
   Completed = 'completed',
-  Failed = 'failed',
+  Failed = 'failed', // This is set only when the wizard proactively aborts the run.
+  Cancelled = 'cancelled', // This is set only when the wizard is cancelled by the user. Or on timeout from the PostHog app.
 }
 ```
 
@@ -122,8 +123,9 @@ The wizard only emits `workflow_id: 'onboarding'` payloads for v1, but the schem
 
 ### What the wizard will ship for V1
 
-- **Sync on by default** — whenever the wizard has an OAuth session or API key, it pushes to the PostHog API with no extra flag needed. `--no-sync` is the escape hatch for users who explicitly want to stay offline.
+- **Sync on by default** — whenever the wizard has an OAuth session or API key, it pushes to the PostHog API with no extra flag needed. `--no-telemetry` is the escape hatch for users who explicitly want to avoid having various tracking like LLMA and other analytics PostHog collects.
 - **Task stream push module** — a new `task-stream-push.ts` that hooks into `WizardStore.emitChange()` and debounces fire-and-forget pushes with the current task list, run phase, event plan, and `run_type`. Zero impact on the TUI — if the push fails, the wizard doesn't notice. Onboarding is the first consumer, but the module stays generic so future migration / audit / single-task runs reuse it.
+- **Timestamping** — The wizard will attach UTC ISO 8601 timestamps to every payload sent. On conflict, latest update wins.
 - **No opinions on transport beyond HTTP POST** — We'll ship the interface to implement any transport we want. We'll leave this open until we have an API/socket to hit on the web app side.
 
 ### What the wizard needs from PostHog
