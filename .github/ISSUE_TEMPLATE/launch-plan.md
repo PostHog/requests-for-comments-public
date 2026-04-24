@@ -68,7 +68,7 @@ _PMM should take the lead on adding additional marketing activities_
 ### Follow-on
 
 -   [ ] Remove early-access feature & feature flags — _Team lead_
--   [ ] Create and upload a sales enablement doc to [the enablement repo](https://github.com/PostHog/sales-enablement) - _PMM_
+-   [ ] If this is a [new product](https://posthog.com/handbook/marketing/product-announcements#new-product-announcements), create and upload a sales enablement doc to [the enablement repo](https://github.com/PostHog/sales-enablement) - _PMM_
 -   [ ] Migrate users and delete beta plans — @PostHog/team-billing
 -   [ ] Funnel Zendesk tickets to created Slack channel — _PMM_
 
