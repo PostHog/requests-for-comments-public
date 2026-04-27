@@ -13,3 +13,11 @@ For example:
 <p align="center">
   <img src="https://user-images.githubusercontent.com/328367/125432954-99e39ab4-2488-4b28-9ade-9d728ff2dc7a.png" alt="PostHog logo" />
 </p>
+
+## 💰 Bounty Contribution
+
+- **Task:** [Launch Plan] PostHog Code Beta
+- **Reward:** $10000
+- **Source:** GitHub-Paid
+- **Date:** 2026-04-27
+
