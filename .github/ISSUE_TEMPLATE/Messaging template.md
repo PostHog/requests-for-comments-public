@@ -8,6 +8,8 @@ assignees: ''
 
 # Messaging
 
+> This template is for raising messaging plans and requests of issues which we can discuss publicly. If this message involves sensitive information, you should [open a private request instead](https://github.com/PostHog/requests-for-comments-internal/issues/new/choose). 
+
 ### Context
 _What are we sending and why? Explain briefly and link to relevant PRs or issues._
 
