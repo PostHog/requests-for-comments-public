@@ -47,7 +47,8 @@ _PMM should take the lead on adding additional marketing activities_
 -   [ ] Draft content and brief website team - _PMM_
 -   [ ] Decide beta reward — _Team lead & PMM_
 -   [ ] For new products: Add email onboarding content and adjust marketing flows - _PMM_
--   [ ] For new products: Create a sales enablement and add to GTM academy - _PMM_
+-   [ ] For new products: Create a sales enablement and add to handbook - _PMM_
+-   [ ] For new products: Ensure product is integrated with Wizard - _PMM_
 
 ### Launch day
 
