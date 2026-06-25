@@ -7,7 +7,7 @@
 
 ## Summary
 
-Browser SDK v2 should be a clean public API boundary for the JavaScript browser SDK. The v2 API removes long-deprecated aliases, switches public SDK naming to camelCase, makes feature flags return one consistent result object, and stops exposing internal implementation objects as public API.
+Browser SDK v2 should be a clean public API boundary for the JavaScript browser SDK. The v2 API removes long-deprecated aliases, standardizes public JavaScript SDK naming on camelCase, makes feature flags return one consistent result object, and stops exposing internal implementation objects as public API.
 
 The intent is not to change the event wire protocol or persisted identity/session semantics. The intent is to make the public API smaller, more consistent with newer SDKs, and easier to document and maintain.
 
@@ -15,7 +15,7 @@ The intent is not to change the event wire protocol or persisted identity/sessio
 
 - Keep the public SDK API focused on app-facing methods.
 - Remove deprecated v1 aliases instead of carrying them into the next major version.
-- Use camelCase for public JavaScript APIs and top-level config keys.
+- Standardize public JavaScript APIs and top-level config keys on camelCase instead of continuing the current mixed snake_case / camelCase surface.
 - Keep v2 feature flag reads on the root `posthog` object.
 - Keep internal objects (`posthog.featureFlags`, underscored `PostHog` internals, extension globals) out of the documented public API.
 - Align browser config naming with recent SDK naming where there is already a better cross-SDK name.
@@ -84,6 +84,14 @@ if (result?.enabled) {
 - Remove `__preview_capture_bot_pageviews`.
 - Drop bot events unless `optOutUseragentFilter` is set.
 - Remove `$bot_pageview` routing.
+
+## Why camelCase
+
+The browser SDK currently has a mixed public naming surface: snake_case methods and config keys sit next to newer camelCase APIs. v2 is the right boundary to standardize on idiomatic JavaScript naming across the public API.
+
+This standardization makes the SDK easier to teach, document, type, and compare with newer SDK APIs. It also avoids carrying both spellings forward as permanent aliases.
+
+This RFC intentionally limits the rename to root methods and top-level config keys. Nested option-object keys remain unchanged for now so the migration is large but bounded.
 
 ## Public root API changes
 
@@ -171,7 +179,7 @@ These APIs are reachable in v1 but should not be public in v2.
 
 ## Top-level config changes
 
-Top-level config keys use camelCase. Nested option-object keys are not included in this pass.
+Top-level config keys use camelCase as part of the standardization effort. Nested option-object keys are not included in this pass.
 
 ### Active config key renames
 
