@@ -76,8 +76,19 @@ if (result?.enabled) {
 
 ### Bot pageviews
 
+`$bot_pageview` routing was a preview experiment: when bot detection matched and `__preview_capture_bot_pageviews` was enabled, the SDK sent bot `$pageview` events as a separate `$bot_pageview` event instead of dropping them. Non-pageview bot events kept their original names.
+
+v2 removes this split event taxonomy. The SDK has one bot policy:
+
+- Drop bot events by default.
+- Use `optOutUseragentFilter` to opt out of user-agent filtering and capture bot traffic with the original event names.
+- Add `$browser_type: 'bot' | 'browser'` when user-agent filtering is opted out.
+
+This keeps pageview analytics and event naming consistent: `$pageview` remains the pageview event, and bot-vs-browser is represented as a property when bot traffic is intentionally captured.
+
+Implementation changes:
+
 - Remove `__preview_capture_bot_pageviews`.
-- Drop bot events by default; `optOutUseragentFilter` opts out of user-agent filtering.
 - Remove `$bot_pageview` routing.
 
 ## Why camelCase
