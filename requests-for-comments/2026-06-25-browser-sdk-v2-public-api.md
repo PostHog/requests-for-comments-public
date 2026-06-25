@@ -27,9 +27,8 @@ The intent is not to change the event wire protocol or persisted identity/sessio
 - Do not rename nested option-object keys in this RFC. Top-level config keys move to camelCase; nested keys remain as they are for now.
 - Do not decide final npm package naming here. This RFC applies to the browser v2 API whether it ships as `posthog-js`, `@posthog/browser`, or both during a transition.
 
-Observable protocol/config exceptions explicitly covered by this RFC:
+Observable behavior/config exceptions explicitly covered by this RFC:
 
-- Drop the legacy `ip` query param entirely.
 - Drop `$bot_pageview` routing.
 - Keep `defaults`, but do not introduce a new initial v2 `defaults` value or a synthetic `$config_defaults: 'v2'` solely because the package is v2.
 
@@ -72,12 +71,6 @@ if (result?.enabled) {
 - v2 init is async.
 - Extension initialization is deferred by default.
 - Remove `__preview_deferred_init_extensions` / `__previewDeferredInitExtensions`.
-
-### Request shape
-
-- Remove the deprecated `ip` config key.
-- Drop the legacy `ip=0` query param entirely.
-- Users who need IP handling should use project-level “Discard IP data” or transformations.
 
 ### Bot pageviews
 
@@ -280,7 +273,7 @@ Wire fields that look like config remain snake_case in payloads: flags request b
 | Removed v1 key | v2 replacement / behavior | Notes |
 | --- | --- | --- |
 | `sanitize_properties` | `beforeSend` | Old hook also ran over `$set_once`; migrations must verify equivalent behavior for that use case. |
-| `ip` | None | v2 drops the legacy `ip` query param entirely. |
+| `ip` | None | v1 warned this config key had no effect. Use project-level “Discard IP data” or transformations for IP handling. |
 | `on_xhr_error` | `onRequestError` | Signature changes from XHR-focused callback to request response callback. |
 | `xhr_headers` | `requestHeaders` | Alias removed. |
 | `process_person` | `personProfiles` | Alias removed. |
@@ -408,7 +401,6 @@ Old queued calls such as `posthog.set_config(...)`, `posthog.register_once(...)`
 - [ ] Make `posthog.featureFlags` internal and remove it from public docs/types.
 - [ ] Rename `advanced_disable_feature_flags` to `disableRemoteFeatureFlags`.
 - [ ] Remove `advanced_disable_flags` and `advanced_disable_decide`.
-- [ ] Drop the legacy `ip` query param.
 - [ ] Keep `defaults`; remove any synthetic initial `defaults: 'v2'` / `$config_defaults: 'v2'` behavior.
 - [ ] Remove `__previewDeferredInitExtensions`; async init defers extensions by default.
 - [ ] Fix `PostHogInterface` so `loaded(posthog)` exposes the final public APIs.
