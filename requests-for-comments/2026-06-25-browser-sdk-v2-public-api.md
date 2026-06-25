@@ -49,7 +49,7 @@ if (result?.enabled) {
 - `posthog.getFeatureFlagPayload()` is removed.
 - `posthog.getFeatureFlagResult()` is not public; its semantics are folded into `getFeatureFlag()`.
 - `posthog.featureFlags` is internal and should not appear in public docs.
-- `posthog.featureFlags.override()` is removed from the public API. If client-side debug/test overrides remain supported, they need an explicit root-level public API.
+- `posthog.featureFlags.override()` is removed from the public API. The existing root `posthog.updateFlags(flags, payloads?, { merge })` API is the public way to inject or override flag values.
 
 ### Remote feature flags
 
@@ -138,7 +138,7 @@ These APIs are reachable in v1 but should not be public in v2.
 | v1 API | v2 API | Notes |
 | --- | --- | --- |
 | `posthog.featureFlags.getFeatureFlagPayload(key)` | No public child replacement | Use `posthog.getFeatureFlag(key)?.payload`. |
-| `posthog.featureFlags.override(flags, suppressWarning?)` | No public child replacement | Add an explicit root API only if debug/test overrides remain a supported use case. |
+| `posthog.featureFlags.override(flags, suppressWarning?)` | `posthog.updateFlags(flags, payloads?, { merge })` | Use the existing root API to inject or override flag values. |
 | `posthog.toolbar._loadEditor(params)` | `posthog.loadToolbar(params)` or `posthog.toolbar.loadToolbar(params)` | Toolbar is no longer called “editor” in the API. |
 | `posthog.toolbar.maybeLoadEditor(...)` | `posthog.toolbar.maybeLoadToolbar(...)` | Internal-ish but reachable. |
 | `posthog.sessionRecording.onRRwebEmit(rawEvent)` | No public replacement | Direct callers are relying on internals. |
@@ -399,6 +399,7 @@ Old queued calls such as `posthog.set_config(...)`, `posthog.register_once(...)`
 - [ ] Implement root `getFeatureFlag()` returning `FeatureFlagResult`.
 - [ ] Remove public root `getFeatureFlagPayload()` and `getFeatureFlagResult()`.
 - [ ] Make `posthog.featureFlags` internal and remove it from public docs/types.
+- [ ] Keep `posthog.updateFlags(flags, payloads?, { merge })` as the public root API for injecting or overriding flag values.
 - [ ] Rename `advanced_disable_feature_flags` to `disableRemoteFeatureFlags`.
 - [ ] Remove `advanced_disable_flags` and `advanced_disable_decide`.
 - [ ] Keep `defaults`; remove any synthetic initial `defaults: 'v2'` / `$config_defaults: 'v2'` behavior.
@@ -415,5 +416,5 @@ Old queued calls such as `posthog.set_config(...)`, `posthog.register_once(...)`
 - Known customer or wrapper SDK usage of removed aliases.
 - Any runtime aliases that are worth keeping for one compatibility release.
 - Whether nested config keys should be renamed in v2 or deferred.
-- Whether a public root-level feature flag override API is needed for debug/test workflows.
+- Any missing use cases that `posthog.updateFlags(flags, payloads?, { merge })` does not cover for debug/test flag overrides.
 - Any migration risks around changed default behavior, bot pageviews, `sanitize_properties` / `$set_once`, or split storage.
