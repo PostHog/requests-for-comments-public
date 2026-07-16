@@ -66,15 +66,26 @@ We could add only a backend side migration and let the frontend call a `/query/v
 
 I'm favoring option a, where we add a backend side migration and call that from the frontend, as it seems to be the easiest (and as such, most scalable) solution for future developers adding query migrations.
 
+**Decision:** we went with option a. See the [Outcome](#outcome) section below for what was built.
+
 ### Option d) Something easy I'm not seeing right now?
 
 - Let me know.
 
-## Implementation
+## Outcome
 
--   Get in touch with customers to deprecate `filters` based insights (already happening). Remove all remaining `filters` conversions.
--   Implement the above.
+_Updated July 2026: the system has been implemented and is in production. The living documentation is [`posthog/schema_migrations/README.md`](https://github.com/PostHog/posthog/blob/master/posthog/schema_migrations/README.md); this section summarizes it._
 
-To be discusssed:
--   Should we add a version field to the queries, so that we know which migrations to run
--   Should we keep migrations forever or should we have a system in place that discards frontend side queries that are older than a certain time
+Migration logic lives only on the backend, in [`posthog/schema_migrations/`](https://github.com/PostHog/posthog/tree/master/posthog/schema_migrations):
+
+-   Query nodes carry an optional integer `version` field. A missing version means version 1. Versions are tracked per node kind (e.g. `TrendsQuery`), so changing one kind doesn't force migrations for the others.
+-   Migrations are numbered files like Django migrations (e.g. `0001_retention_query_show_mean.py`). Each defines a `SchemaMigration` with `targets` (the node kinds and versions it upgrades from) and a `transform` that rewrites the query dict. A CI check enforces that versions per kind stay linear, without gaps or duplicates.
+-   The backend upgrades queries at read/execution time wherever persisted queries enter the system: the query endpoint, insight serialization, cache warming, alerts, exports, cohort queries, and endpoint snapshots.
+-   The frontend never re-implements transforms. Queries constructed in frontend code are stamped with the latest versions (`setLatestVersionsOnQuery`, backed by a generated `latest-versions.json`), so they never need migrating. For stored queries the backend can't upgrade in place (URL-embedded queries, notebook nodes), the frontend checks versions locally and only calls the dedicated `POST /api/environments/:id/query/upgrade` endpoint when a query is actually outdated. In practice this makes the extra round-trip from option a's cons rare.
+
+The open questions were resolved as follows:
+
+-   **Version field:** yes, per node kind, defaulting to 1 when absent.
+-   **Keeping migrations:** migrations are kept indefinitely; old queries are always upgraded forward, never discarded. Insights stored in Postgres are additionally backfilled by a scheduled Temporal workflow to shrink the long tail of old versions. Other stores (notebooks, endpoint snapshots, dashboard templates, cohorts) rely on read-time upgrades forever. Deprecated fields stay in the schema until we're confident no un-upgraded data remains.
+
+Legacy `filters`-based insights still exist and are converted at runtime via `filter_to_query`. That conversion is composed with version upgrades in the `upgrade_query()` context manager, so one call handles both legacy filters and outdated query versions.
