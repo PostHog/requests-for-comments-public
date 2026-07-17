@@ -3,7 +3,7 @@
 - **Status:** Proposed
 - **Decision maker:** @Team Client Libraries
 - **Owner:** @dustinbyrne
-- **Last updated:** 2026-06-25
+- **Last updated:** 2026-07-16
 
 ## Summary
 
@@ -11,78 +11,101 @@ Browser SDK v2 should be a clean public API boundary for the JavaScript browser 
 aliases, standardizes public JavaScript SDK naming on camelCase, makes feature flags return one consistent result
 object, and stops exposing internal implementation objects as public API.
 
-Event wire protocol and persisted identity/session semantics stay stable. This RFC makes the public API smaller, more
+Core event transport and persisted identity/session semantics stay stable. The explicitly listed `$browser_type` and
+`$config_defaults` property changes are the only event-property changes. This RFC makes the public API smaller, more
 consistent with newer SDKs, and easier to document and maintain.
 
 ## Goals
 
-- Keep the public SDK API focused on top-level supported methods.
-- Remove deprecated v1 aliases instead of carrying them into the next major version.
-- Standardize public JavaScript APIs and top-level config keys on camelCase instead of continuing the current mixed
+- Keep the public SDK API focused on app-facing methods.
+- Remove deprecated v1 aliases instead of carrying them into the next major version, except where ignoring an old
+  privacy or consent key could increase collection.
+- Standardize public JavaScript APIs and all SDK-owned option keys on camelCase instead of continuing the current mixed
   snake_case / camelCase surface.
 - Keep v2 feature flag reads on the root `posthog` object.
-- Keep internal objects (`posthog.featureFlags`, underscored `PostHog` internals, extension globals) out of the
-  documented public API.
-- Keep the `defaults` mechanism for future default-behavior versioning.
+- Keep internal objects (`posthog.featureFlags`, child implementation objects, underscored `PostHog` internals, and
+  legacy extension globals) out of both the documented public API and the public unmangled namespace; reserve only one
+  versioned private bridge for lazy extension bundles.
 
 ## Scope
 
-This RFC covers the browser SDK v2 public API and top-level config migration. Event names, event `$properties`, request
-body fields, query/body wire protocol fields, and persisted identity/session semantics stay stable. The observable
-behavior/config changes are listed below.
-
-Nested option-object keys stay unchanged in this RFC. Top-level config keys move to camelCase; nested keys remain as
-they are for now.
+This RFC covers the browser SDK v2 public API and config migration. All SDK-owned top-level and nested option keys move
+to camelCase from the first v2 release. Except for the explicit `$browser_type` addition and `$config_defaults` removal,
+event names, event `$properties`, request body fields, query/body wire protocol fields, third-party option objects passed
+through verbatim, and persisted identity/session semantics stay stable.
 
 Final npm package naming is tracked separately. This RFC applies to the browser v2 API whether it ships as `posthog-js`,
 `@posthog/browser`, or both during a transition.
 
+Product tours remains a shared extension that runs the same implementation in v1 and v2. Removing product tours code
+is not part of the v2 release and can be decided independently.
+
+Moving shared implementation into `@posthog/core` is also not a v2 prerequisite. We should evaluate it case by case
+against browser bundle size, the cost of maintaining v1, and the size of the shared API surface.
+
 Observable behavior/config changes covered by this RFC:
 
 - Drop `$bot_pageview` routing.
-- Keep `defaults` as the versioning mechanism for future default changes.
+- Adopt the latest staged v1 behaviors as the v2 baseline.
+- Remove the dated `defaults` mechanism; future behavior changes ship through explicit package and script-loader
+  versions.
 
 ## Decisions
 
 ### Feature flags
 
-v2 uses one root feature flag read API:
+v2 uses one synchronous root feature flag read API:
 
 ```ts
-const result = posthog.getFeatureFlag("new-onboarding");
+const result = posthog.getFeatureFlag('new-onboarding')
 if (result?.enabled) {
-  console.log(result.variant, result.payload);
+    console.log(result.variant, result.payload)
 }
 ```
 
-- `posthog.getFeatureFlag('name')` returns `FeatureFlagResult | undefined`.
-- `posthog.getFeatureFlagPayload()` is removed.
-- `posthog.getFeatureFlagResult()` is internal; its semantics are folded into `getFeatureFlag()`.
-- `posthog.featureFlags` is internal and excluded from public docs.
-- `posthog.featureFlags.override()` is removed from the public API. The existing root
-  `posthog.updateFlags(flags, payloads?, { merge })` API is the public way to inject or override flag values.
+- `posthog.getFeatureFlag('name')` returns `FeatureFlagResult | undefined`. It returns `undefined` when flags are not
+  available yet.
+- `posthog.getFeatureFlagPayload()`, `posthog.getFeatureFlagResult()`, `posthog.getAllFeatureFlags()`, and
+  `posthog.isFeatureEnabled()` are removed; their read semantics are folded into `getFeatureFlag()`.
+- `posthog.onFeatureFlags(callback)` remains the subscription API for initial availability and later updates, with the
+  callback signature `(flags: FeatureFlagResult[], errorsLoading: boolean) => void`.
+- `posthog.featureFlags` is private and absent from public docs, types, and the unmangled `posthog` namespace.
+- `posthog.featureFlags.override()` is removed. The root `posthog.updateFlags(flags, payloads?, { merge })` API is the
+  public way to inject or override flag values.
 
-### Remote feature flags config
+A `FeatureFlagResult` is an object even when `enabled` is `false`. Existing truthiness checks such as
+`if (posthog.getFeatureFlag('key'))` must migrate to `if (posthog.getFeatureFlag('key')?.enabled)`; otherwise a loaded
+disabled flag would take the truthy branch.
 
-- Rename browser `advanced_disable_feature_flags` to `disableRemoteFeatureFlags`.
-- Match the recent core / React Native / web-lite behavior: with `disableRemoteFeatureFlags: true`, reads use
-  bootstrapped or runtime-supplied flag values instead of remote flag evaluation.
-- Keep remote config available when `disableRemoteFeatureFlags` is enabled.
+### Remote feature flags
+
+- Replace browser `advanced_disable_feature_flags` with the positive `featureFlagEvaluation` boolean, which defaults to
+  `true`.
+- With `featureFlagEvaluation: false`, reads use bootstrapped or runtime-supplied values instead of remote flag
+  evaluation.
+- Remote config remains available when `featureFlagEvaluation` is disabled.
 - Drop `advanced_disable_flags` entirely. Remove the broader “kill remote config and flags APIs” switch.
 - Drop `advanced_disable_decide` with `advanced_disable_flags`.
 
-### Defaults
+### Default behavior
 
-- Keep `defaults` as the mechanism for future default-behavior versioning.
-- Users can omit `defaults` for the initial v2 baseline.
-- Future dated default sets continue to use `defaults: '<date>'`.
-- `$config_defaults` continues to reflect the configured `defaults` value.
+- Remove the `defaults` config key and `$config_defaults` event property in v2.
+- The first v2 release uses the baseline listed in [v2 baseline defaults](#v2-baseline-defaults).
+- Future default changes require an explicit package or script-loader version rather than a dated config switch.
 
 ### Async init and extension loading
 
-- v2 init is async.
+- v2 init is async and module callers await it before using the returned instance.
+- App-facing calls made through the snippet or root singleton while init is pending—including `capture()`, `identify()`,
+  registration, `setConfig()`, and consent methods—are queued in invocation order. Synchronous reads return their
+  documented not-ready value instead of being queued.
+- After base initialization, the SDK replays the full pre-init queue in order while network transmission remains paused.
+  It begins sending only after configuration, persistence, and consent operations in that queue have been applied, so a
+  queued opt-out can suppress earlier queued captures.
+- If init fails, queued calls are discarded and a warning is emitted; the SDK must not transmit a queued capture with
+  partially initialized privacy settings.
 - Extension initialization is deferred by default.
-- Remove `__preview_deferred_init_extensions` / `__previewDeferredInitExtensions` as a result.
+- Remove `__preview_deferred_init_extensions` / `__previewDeferredInitExtensions`.
 
 ### Bot pageviews
 
@@ -112,26 +135,29 @@ camelCase APIs. v2 is the right boundary to standardize on idiomatic JavaScript 
 This standardization makes the SDK easier to teach, document, type, and compare with newer SDK APIs. It also removes
 pressure to carry both spellings forward as permanent aliases.
 
-This RFC intentionally limits the rename to root methods and top-level config keys. Nested option-object keys remain
-unchanged for now so the migration is large but bounded.
+The rename applies to root methods and every SDK-owned option object from the first v2 release. Wire payload fields,
+event properties, customer-defined keys, and third-party option objects passed through without interpretation keep
+their existing names.
 
 ## Public root API changes
 
 ### Removed or replaced methods/properties
 
-| v1 API                                                                     | v2 API                                                                                                     | Notes                                                            |
-| -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| `posthog.people.set(props)` / `posthog.people.set('key', value)`           | `posthog.setPersonProperties(props)` / `posthog.setPersonProperties({ key: value })`                       | Callback argument is removed.                                    |
-| `posthog.people.set_once(props)` / `posthog.people.set_once('key', value)` | `posthog.setPersonProperties(undefined, props)` / `posthog.setPersonProperties(undefined, { key: value })` | Preserves `$set_once` behavior through the second argument.      |
-| `posthog.decideEndpointWasHit`                                             | `posthog.flagsEndpointWasHit`                                                                              | `/decide` naming is retired.                                     |
-| `posthog._calculate_event_properties(...)`                                 | `posthog.calculateEventProperties(...)`                                                                    | Deprecated since 1.241.0.                                        |
-| `posthog.getFeatureFlag(key)` returning a raw flag value                   | `posthog.getFeatureFlag(key)` returning `FeatureFlagResult                                                 | undefined`                                                       | Root feature flag API returns value, variant, payload, and metadata together. |
-| `posthog.getFeatureFlagPayload(key)`                                       | `posthog.getFeatureFlag(key)?.payload`                                                                     | Payload is part of `FeatureFlagResult`.                          |
-| `posthog.getFeatureFlagResult(key)`                                        | `posthog.getFeatureFlag(key)`                                                                              | Result semantics move to the main API.                           |
-| `posthog.renderSurvey(surveyId, selector)`                                 | `posthog.displaySurvey(surveyId, { displayType: DisplaySurveyType.Inline, selector })`                     | `displaySurvey` also supports popovers and richer options.       |
-| `posthog.canRenderSurvey(surveyId)`                                        | `const result = await posthog.canRenderSurveyAsync(surveyId); result.visible`                              | Async API returns a `SurveyRenderReason`; read `result.visible`. |
-| `posthog.webPerformance`                                                   | No replacement                                                                                             | Deprecated compatibility shim removed.                           |
-| `posthog.featureFlags`                                                     | Internal                                                                                                   | Exclude from public docs.                                        |
+| v1 API                                                                     | v2 API                                                                                                     | Notes                                                                                 |
+| -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| `posthog.people.set(props)` / `posthog.people.set('key', value)`           | `posthog.setPersonProperties(props)` / `posthog.setPersonProperties({ key: value })`                       | Callback argument is removed.                                                         |
+| `posthog.people.set_once(props)` / `posthog.people.set_once('key', value)` | `posthog.setPersonProperties(undefined, props)` / `posthog.setPersonProperties(undefined, { key: value })` | Preserves `$set_once` behavior through the second argument.                           |
+| `posthog.decideEndpointWasHit`                                             | No replacement                                                                                             | The internal request status is not a useful public contract.                          |
+| `posthog._calculate_event_properties(...)`                                 | No public replacement                                                                                      | Event-property calculation remains private.                                           |
+| `posthog.getFeatureFlag(key)` returning a raw flag value                   | `posthog.getFeatureFlag(key)` returning `FeatureFlagResult \| undefined`                                   | Root feature flag API returns value, variant, payload, and metadata together.         |
+| `posthog.getFeatureFlagPayload(key)`                                       | `posthog.getFeatureFlag(key)?.payload`                                                                     | Payload is part of `FeatureFlagResult`.                                               |
+| `posthog.getFeatureFlagResult(key)`                                        | `posthog.getFeatureFlag(key)`                                                                              | Result semantics move to the main API.                                                |
+| `posthog.getAllFeatureFlags()`                                             | No replacement                                                                                             | Read individual flags through `getFeatureFlag()`.                                     |
+| `posthog.isFeatureEnabled(key)`                                            | `posthog.getFeatureFlag(key)?.enabled`                                                                     | The result object replaces the boolean helper.                                        |
+| `posthog.renderSurvey(surveyId, selector)`                                 | `posthog.displaySurvey(surveyId, { displayType: DisplaySurveyType.Inline, selector })`                     | `displaySurvey` also supports popovers and richer options.                            |
+| `posthog.canRenderSurvey(surveyId)` / `posthog.canRenderSurveyAsync(...)`  | `const result = await posthog.canRenderSurvey(surveyId); result.visible`                                   | The async behavior moves to the unsuffixed method and returns a `SurveyRenderReason`. |
+| `posthog.webPerformance`                                                   | No replacement                                                                                             | Deprecated compatibility shim removed.                                                |
+| `posthog.featureFlags`                                                     | Private                                                                                                    | Absent from public docs, types, and the unmangled root namespace.                     |
 
 ### Root method renames
 
@@ -162,45 +188,28 @@ Related entrypoint renames:
 
 ## Child/internal API cleanup
 
-These APIs are reachable in v1 and become internal in v2.
+Child implementation objects are private in v2. Public use cases must go through a supported root method.
 
-| v1 API                                                   | v2 API                                                                 | Notes                                                          |
-| -------------------------------------------------------- | ---------------------------------------------------------------------- | -------------------------------------------------------------- |
-| `posthog.featureFlags.getFeatureFlagPayload(key)`        | No public child replacement                                            | Use `posthog.getFeatureFlag(key)?.payload`.                    |
-| `posthog.featureFlags.override(flags, suppressWarning?)` | `posthog.updateFlags(flags, payloads?, { merge })`                     | Use the existing root API to inject or override flag values.   |
-| `posthog.toolbar._loadEditor(params)`                    | `posthog.loadToolbar(params)` or `posthog.toolbar.loadToolbar(params)` | Toolbar is no longer called “editor” in the API.               |
-| `posthog.toolbar.maybeLoadEditor(...)`                   | `posthog.toolbar.maybeLoadToolbar(...)`                                | Internal-ish but reachable.                                    |
-| `posthog.sessionRecording.onRRwebEmit(rawEvent)`         | No public replacement                                                  | Direct callers are relying on internals.                       |
-| `posthog.experiments._is_bot()`                          | `posthog.experiments.isBot()`                                          | Internal helper renamed during underscore cleanup.             |
-| `URLTriggerMatching.onRemoteConfig(response)`            | `URLTriggerMatching.onConfig(response)`                                | Deep replay trigger-matching export; deprecated alias removed. |
-| `LinkedFlagMatching.onRemoteConfig(response, onStarted)` | `LinkedFlagMatching.onConfig(response, onStarted)`                     | Deep replay trigger-matching export; deprecated alias removed. |
-| `EventTriggerMatching.onRemoteConfig(response)`          | `EventTriggerMatching.onConfig(response)`                              | Deep replay trigger-matching export; deprecated alias removed. |
+| v1 reachable API                                             | v2 public contract                                                     |
+| ------------------------------------------------------------ | ---------------------------------------------------------------------- |
+| `posthog.featureFlags.*`                                     | Root `getFeatureFlag()`, `onFeatureFlags()`, and `updateFlags()` only. |
+| `posthog.toolbar._loadEditor(params)`                        | `posthog.loadToolbar(params)`.                                         |
+| `posthog.toolbar.maybeLoadEditor(...)`                       | No public replacement; conditional loading is private.                 |
+| `posthog.sessionRecording.onRRwebEmit(rawEvent)`             | No public replacement.                                                 |
+| `posthog.experiments._is_bot()`                              | No public replacement; use a private utility if needed.                |
+| `URLTriggerMatching.onRemoteConfig(response)`                | No public replacement.                                                 |
+| `LinkedFlagMatching.onRemoteConfig(response, onStarted)`     | No public replacement.                                                 |
+| `EventTriggerMatching.onRemoteConfig(response)`              | No public replacement.                                                 |
+| `posthog.persistence` / `posthog.sessionPersistence` methods | No public replacement.                                                 |
 
-## `PostHogPersistence` method cleanup
-
-`PostHogPersistence` is internal but technically reachable from `posthog.persistence` / `posthog.sessionPersistence`.
-
-| v1                          | v2                       |
-| --------------------------- | ------------------------ |
-| `register_once()`           | `registerOnce()`         |
-| `update_campaign_params()`  | `updateCampaignParams()` |
-| `update_search_keyword()`   | `updateSearchKeyword()`  |
-| `update_referrer_info()`    | `updateReferrerInfo()`   |
-| `set_initial_person_info()` | `setInitialPersonInfo()` |
-| `get_initial_props()`       | `getInitialProps()`      |
-| `update_config()`           | `updateConfig()`         |
-| `set_disabled()`            | `setDisabled()`          |
-| `set_cross_subdomain()`     | `setCrossSubdomain()`    |
-| `set_secure()`              | `setSecure()`            |
-| `set_event_timer()`         | `setEventTimer()`        |
-| `remove_event_timer()`      | `removeEventTimer()`     |
-| `get_property()`            | `getProperty()`          |
-| `set_property()`            | `setProperty()`          |
+The implementation may still rename private methods to camelCase for consistency, but those names are not migration
+APIs. If a child-object use case proves necessary after release, add a narrow root method rather than exposing the
+implementation object.
 
 ## Top-level config changes
 
-Top-level config keys use camelCase as part of the standardization effort. Nested option-object keys stay unchanged in
-this pass.
+Top-level config keys use camelCase as part of the standardization effort. Nested SDK-owned option keys follow the same
+rule and are cataloged separately below.
 
 ### Active config key renames
 
@@ -210,6 +219,7 @@ this pass.
 | `flags_api_host`                               | `flagsApiHost`                           |
 | `ui_host`                                      | `uiHost`                                 |
 | `api_transport`                                | `apiTransport`                           |
+| `token`                                        | `projectToken`                           |
 | `cross_subdomain_cookie`                       | `crossSubdomainCookie`                   |
 | `persistence_name`                             | `persistenceName`                        |
 | `cookie_persisted_properties`                  | `cookiePersistedProperties`              |
@@ -219,6 +229,7 @@ this pass.
 | `custom_blocked_useragents`                    | `customBlockedUseragents`                |
 | `capture_pageview`                             | `capturePageview`                        |
 | `capture_pageleave`                            | `capturePageleave`                       |
+| `disable_capture_url_hashes`                   | `disableCaptureUrlHashes`                |
 | `cookie_expiration`                            | `cookieExpiration`                       |
 | `disable_session_recording`                    | `disableSessionRecording`                |
 | `disable_persistence`                          | `disablePersistence`                     |
@@ -259,7 +270,7 @@ this pass.
 | `mask_all_text`                                | `maskAllText`                            |
 | `mask_personal_data_properties`                | `maskPersonalDataProperties`             |
 | `custom_personal_data_properties`              | `customPersonalDataProperties`           |
-| `advanced_disable_feature_flags`               | `disableRemoteFeatureFlags`              |
+| `advanced_disable_feature_flags`               | `featureFlagEvaluation`                  |
 | `advanced_disable_feature_flags_on_first_load` | `advancedDisableFeatureFlagsOnFirstLoad` |
 | `evaluation_contexts`                          | `evaluationContexts`                     |
 | `flag_keys`                                    | `flagKeys`                               |
@@ -273,6 +284,7 @@ this pass.
 | `remote_config_refresh_interval_ms`            | `remoteConfigRefreshIntervalMs`          |
 | `get_device_id`                                | `getDeviceId`                            |
 | `before_send`                                  | `beforeSend`                             |
+| `get_current_url`                              | `getCurrentUrl`                          |
 | `capture_performance`                          | `capturePerformance`                     |
 | `disable_compression`                          | `disableCompression`                     |
 | `capture_heatmaps`                             | `captureHeatmaps`                        |
@@ -290,20 +302,50 @@ this pass.
 | `tracing_headers`                              | `tracingHeaders`                         |
 | `disable_beacon`                               | `disableBeacon`                          |
 
-Top-level keys that intentionally remain unchanged: `token`, `name`, `autocapture`, `rageclick`, `persistence`,
-`loaded`, `debug`, `upgrade`, `surveys`, `logs`, `bootstrap`, `segment`, `integrations`, `defaults`.
+`advanced_disable_feature_flags: true` maps to `featureFlagEvaluation: false`; it is the only active-config rename
+that inverts a boolean.
 
-Internal `__extensionClasses` remains internal.
+Top-level keys that intentionally remain unchanged: `name`, `autocapture`, `rageclick`, `persistence`, `loaded`,
+`debug`, `upgrade`, `surveys`, `logs`, `bootstrap`, `segment`, and `integrations`.
 
-Wire fields that look like config remain snake_case in payloads: flags request body `evaluation_contexts` / `flag_keys`,
-conversations payload/query `identity_distinct_id` / `identity_hash`.
+Internal `__extensionClasses` remains private.
+
+Wire fields that look like config remain snake_case in payloads: project `token`, flags request body
+`evaluation_contexts` / `flag_keys`, and conversations payload/query `identity_distinct_id` / `identity_hash`.
+
+### Nested option key renames
+
+All SDK-owned nested config types use camelCase. This catalog covers the existing snake_case keys; nested keys already
+using camelCase are unchanged.
+
+| Option object                  | v1 keys                                                                                                    | v2 keys                                                                                            |
+| ------------------------------ | ---------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `autocapture`                  | `url_allowlist`, `url_ignorelist`, `dom_event_allowlist`, `element_allowlist`                              | `urlAllowlist`, `urlIgnorelist`, `domEventAllowlist`, `elementAllowlist`                           |
+| `autocapture`                  | `css_selector_allowlist`, `css_selector_ignorelist`, `element_attribute_ignorelist`, `capture_copied_text` | `cssSelectorAllowlist`, `cssSelectorIgnorelist`, `elementAttributeIgnorelist`, `captureCopiedText` |
+| `rageclick`                    | `css_selector_ignorelist`, `content_ignorelist`, `ignore_text_selection`                                   | `cssSelectorIgnorelist`, `contentIgnorelist`, `ignoreTextSelection`                                |
+| `rageclick`                    | `threshold_px`, `click_count`, `timeout_ms`                                                                | `thresholdPx`, `clickCount`, `timeoutMs`                                                           |
+| `capturePerformance`           | `network_timing`, `web_vitals`, `web_vitals_allowed_metrics`                                               | `networkTiming`, `webVitals`, `webVitalsAllowedMetrics`                                            |
+| `capturePerformance`           | `web_vitals_delayed_flush_ms`, `web_vitals_attribution`                                                    | `webVitalsDelayedFlushMs`, `webVitalsAttribution`                                                  |
+| `errorTracking`                | `exception_steps`                                                                                          | `exceptionSteps`                                                                                   |
+| `errorTracking.exceptionSteps` | `max_bytes`                                                                                                | `maxBytes`                                                                                         |
+| `captureExceptions`            | `capture_unhandled_errors`, `capture_unhandled_rejections`, `capture_console_errors`                       | `captureUnhandledErrors`, `captureUnhandledRejections`, `captureConsoleErrors`                     |
+| `captureDeadClicks`            | `scroll_threshold_ms`, `selection_change_threshold_ms`, `mutation_threshold_ms`                            | `scrollThresholdMs`, `selectionChangeThresholdMs`, `mutationThresholdMs`                           |
+| `captureDeadClicks`            | `capture_clicks_with_modifier_keys`, `css_selector_ignorelist`, `element_attribute_ignorelist`             | `captureClicksWithModifierKeys`, `cssSelectorIgnorelist`, `elementAttributeIgnorelist`             |
+| `captureHeatmaps`              | `flush_interval_milliseconds`                                                                              | `flushIntervalMilliseconds`                                                                        |
+| `sessionRecording`             | `full_snapshot_interval_millis`, `compress_events`, `session_idle_threshold_ms`                            | `fullSnapshotIntervalMillis`, `compressEvents`, `sessionIdleThresholdMs`                           |
+| `requestQueueConfig`           | `flush_interval_ms`                                                                                        | `flushIntervalMs`                                                                                  |
+| `FeatureFlagOptions`           | `send_event`                                                                                               | `sendEvent`                                                                                        |
+
+Private `__*` knobs are not renamed into public options. The implementation checklist includes an audit of every public
+option type so newly added or less common SDK-owned objects follow the same rule.
 
 ### Removed config aliases and dead keys
 
 | Removed v1 key                                  | v2 replacement / behavior                   | Notes                                                                                                                 |
 | ----------------------------------------------- | ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `sanitize_properties`                           | `beforeSend`                                | Old hook also ran over `$set_once`; migrations must verify equivalent behavior for that use case.                     |
+| `sanitize_properties`                           | `beforeSend`                                | Compatibility preserves `$set_once`; direct `beforeSend` migrations must handle it explicitly.                        |
 | `ip`                                            | None                                        | v1 warned this config key had no effect. Use project-level “Discard IP data” or transformations for IP handling.      |
+| `defaults`                                      | None                                        | v2 uses its package/script-loader baseline directly.                                                                  |
 | `on_xhr_error`                                  | `onRequestError`                            | Signature changes from XHR-focused callback to request response callback.                                             |
 | `xhr_headers`                                   | `requestHeaders`                            | Alias removed.                                                                                                        |
 | `process_person`                                | `personProfiles`                            | Alias removed.                                                                                                        |
@@ -333,26 +375,47 @@ conversations payload/query `identity_distinct_id` / `identity_hash`.
 | `__preview_cookie_wins_on_conflict`             | None                                        | Cookie-wins merge behavior is the only behavior.                                                                      |
 | `__preview_capture_bot_pageviews`               | None                                        | `$bot_pageview` routing removed.                                                                                      |
 
-## Defaults behavior
+### Safety-critical v1 key compatibility
 
-v2 keeps the `defaults` config key so future default changes can be introduced behind dated default sets. Initial v2
-uses the package baseline defaults.
+The clean v2 boundary must not cause the SDK to collect or persist more data because JavaScript silently accepted an
+old key. Throughout v2, the SDK also reads the v1 spelling when the v2 spelling is absent, applies the same behavior,
+and emits one migration warning per key and instance. If both spellings are present, the v2 key wins and a conflict
+warning identifies the ignored v1 key.
 
-The v2 package baseline includes the latest default behavior that had already been staged in v1:
+This compatibility allowlist covers:
 
-| Config key                    | v2 baseline default                                                                             | v1 undated default |
-| ----------------------------- | ----------------------------------------------------------------------------------------------- | ------------------ | ----------- |
-| `capturePageview`             | `'history_change'`                                                                              | `true`             |
-| `rageclick`                   | `{ content_ignorelist: DEFAULT_CONTENT_IGNORELIST_WITH_STEPPERS, ignore_text_selection: true }` | `true`             |
-| `sessionRecording`            | `{ strictMinimumDuration: true }`                                                               | `{}`               |
-| `externalScriptsInjectTarget` | `'head'`                                                                                        | `'body'`           |
-| `internalOrTestUserHostname`  | `/^(localhost                                                                                   | 127\.0\.0\.1)$/`   | `undefined` |
-| `persistenceSaveDebounceMs`   | `250`                                                                                           | `0`                |
-| `splitStorage`                | `true`                                                                                          | `false`            |
-| `detectGoogleSearchApp`       | `true`                                                                                          | `false`            |
+- Consent and persistence: `cross_subdomain_cookie`, `cookie_persisted_properties`, `disable_persistence`,
+  `disable_cookie`, `secure_cookie`, every `opt_out_*` key, `consent_persistence_name`, `respect_dnt`, and
+  `cookieless_mode`.
+- Capture enablement and filtering: `capture_pageview`, `capture_pageleave`, `disable_session_recording`,
+  `session_recording`, `error_tracking`, `capture_performance`, `capture_heatmaps`, `enable_heatmaps`,
+  `capture_dead_clicks`, `capture_exceptions`, `disable_scroll_properties`, `opt_out_useragent_filter`,
+  `person_profiles`, and `process_person`.
+- Redaction and pre-send controls: `disable_capture_url_hashes`, `property_denylist`, `property_blacklist`,
+  `before_send`, `sanitize_properties`, `mask_all_element_attributes`, `mask_all_text`,
+  `mask_personal_data_properties`, and `custom_personal_data_properties`.
+- Nested autocapture allowlists/ignorelists and attribute filters, nested exception-capture switches, and nested
+  dead-click allowlists/ignorelists and attribute filters listed in the nested migration catalog.
 
-Users should use individual config overrides to preserve older behavior. Future default changes should use
-`defaults: '<date>'` again.
+Other removed aliases and dead keys are ignored after a warning; they are not silently translated.
+
+## v2 baseline defaults
+
+The v2 baseline includes the latest default behavior that had already been staged in v1:
+
+| Config key                    | v2 baseline default                                                                                 | v1 undated default |
+| ----------------------------- | --------------------------------------------------------------------------------------------------- | ------------------ |
+| `capturePageview`             | `'history_change'`                                                                                  | `true`             |
+| `rageclick`                   | `{ contentIgnorelist: DEFAULT_CONTENT_IGNORELIST_WITH_STEPPERS, ignoreTextSelection: true }`        | `true`             |
+| `sessionRecording`            | `{ strictMinimumDuration: true, canvasCapture: { resolutionScale: 0.6 }, streamNetworkBody: true }` | `{}`               |
+| `externalScriptsInjectTarget` | `'head'`                                                                                            | `'body'`           |
+| `internalOrTestUserHostname`  | `/^(localhost\|127\.0\.0\.1)$/`                                                                     | `undefined`        |
+| `persistenceSaveDebounceMs`   | `250`                                                                                               | `0`                |
+| `splitStorage`                | `true`                                                                                              | `false`            |
+| `detectGoogleSearchApp`       | `true`                                                                                              | `false`            |
+| `disableCaptureUrlHashes`     | `true`                                                                                              | `false`            |
+
+Users should use individual config overrides to preserve older behavior.
 
 ## Window globals and extension contract removals
 
@@ -384,33 +447,28 @@ Also remove `window.__PosthogExtensions__.loadWebVitalsCallbacks()`.
 | `RemoteConfig.editorParams`             | Removed   | Use `toolbarParams`.                                         |
 | `RemoteConfig.toolbarVersion`           | Removed   | Obsolete toolbar metadata.                                   |
 
-## Public-ish underscored `PostHog` internals
+## Private-by-default `PostHog` internals
 
-These were reachable on the class and consumed by some internal modules, external bundles, wrapper SDKs, or snippets. v2
-gives the cross-module ones stable non-underscored names and marks them `@internal`. They are internal APIs, but they
-are breaking changes for deep integrations. They may be exposed by some other internal means.
+Anything not declared in the public v2 interface is private, absent from the unmangled `posthog` namespace, and free to
+be renamed or mangled. A v1 member does not receive a stable non-underscored name merely because internal modules or
+external code could reach it.
 
-| v1                          | v2                                                          |
-| --------------------------- | ----------------------------------------------------------- |
-| `__loaded`                  | `isLoaded` (`@internal`)                                    |
-| `_init()`                   | `internalInit()` (`@internal`)                              |
-| `_onRemoteConfig()`         | `onRemoteConfig()` (`@internal`)                            |
-| `_dom_loaded()`             | `domLoaded()` (`@internal`)                                 |
-| `_send_request()`           | `sendRequest()` (`@internal`)                               |
-| `_send_retriable_request()` | `sendRetriableRequest()` (`@internal`)                      |
-| `_execute_array()`          | `executeArray()` (`@internal`)                              |
-| `_addCaptureHook()`         | `addCaptureHook()` (`@internal`)                            |
-| `_internalEventEmitter`     | `internalEventEmitter` (`@internal`)                        |
-| `_overrideSDKInfo()`        | `overrideSDKInfo()` (`@internal`; wrapper SDKs must update) |
-| `_is_bot()`                 | `isBot()` (`@internal`)                                     |
-| `_shouldDisableFlags()`     | Removed with `advanced_disable_flags`                       |
-| `_isIdentified()`           | `isIdentified()` (promoted to public)                       |
+| v1 reachable member                                                | v2 status                                                                                   |
+| ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------- |
+| `__loaded`, `_init()`, `_onRemoteConfig()`, `_dom_loaded()`        | Private; no public replacement.                                                             |
+| `_send_request()`, `_send_retriable_request()`, `_execute_array()` | Private; no public replacement.                                                             |
+| `_addCaptureHook()`, `_internalEventEmitter`, `_is_bot()`          | Private; no public replacement.                                                             |
+| `_shouldDisableFlags()`                                            | Removed with `advanced_disable_flags`.                                                      |
+| `_isIdentified()`                                                  | `isIdentified()` is promoted to the public root API.                                        |
+| `_overrideSDKInfo()`                                               | Wrapper SDKs use `overrideSDKInfo(posthog, ...)` from the explicit `./internal` entrypoint. |
 
-The remaining class-only internals are explicitly private and can be mangled in production builds. Non-exhaustive
-examples include `_requestQueue`, `_retryQueue`, `_loaded`, `_startQueueIfOptedIn`, `_handleUnload`,
-`_calculateSetOnceProperties`, `_registerSingle`, `_hasPersonProcessing`, `_shouldCapturePageleave`,
-`_requirePersonProcessing`, `_captureInitialPageview`, `_initRequestQueue` (from `__request_queue`), `_triggeredNotifs`
-(from `_triggered_notifs`), and removed `_originalUserConfig`.
+The `./internal` entrypoint is the typed integration boundary for first-party wrappers. It is excluded from generated
+customer references and may contain only contracts that must cross package boundaries. Lazy extension bundles use the
+versioned `window.__PosthogExtensions__` bridge described above; this is the sole required global implementation
+bridge and is also excluded from public types and customer documentation.
+
+All other implementation state, including request queues, persistence objects, extension instances, capture hooks, and
+initialization helpers, remains private.
 
 ## Snippet and queued-call migration
 
@@ -419,29 +477,57 @@ The snippet queue dispatches by method name. Queued calls must use v2 method nam
 Examples:
 
 ```js
-posthog.setConfig({ disableSessionRecording: true });
-posthog.registerOnce({ plan: "pro" });
-posthog.getDistinctId();
+posthog.setConfig({ disableSessionRecording: true })
+posthog.registerOnce({ plan: 'pro' })
+posthog.getDistinctId()
 ```
 
 Old queued calls such as `posthog.set_config(...)`, `posthog.register_once(...)`, or `posthog.get_distinct_id()` fail in
-v2 because the queue processor dispatches by exact method name.
+v2 because the queue processor dispatches by exact method name. Calls using valid v2 names remain queued while async
+init is pending under the ordering and failure rules above.
 
 ## Runtime behavior for removed aliases
 
-- Removed methods and properties are absent at runtime.
-- Removed config keys in plain JavaScript can still exist on user objects; the SDK ignores them.
-- Removed config keys are ignored directly rather than translated silently.
-- Any one-release runtime alias must be an explicit compatibility shim with warnings and a removal date, rather than
+- Removed methods, child objects, and properties are absent at runtime.
+- Unknown config keys in plain JavaScript produce a migration warning and are otherwise ignored.
+- The safety-critical compatibility allowlist translates its v1 spellings throughout v2 when the v2 key is absent.
+- Any additional runtime alias must be an explicit compatibility shim with a warning and removal plan, rather than
   accidental public API.
+
+## Migration and documentation
+
+- Generate and host separate v1 and v2 SDK references so existing v1 deep links remain valid and v2 exposes only the
+  supported public interface. The reference build must validate links for both versions.
+- Audit the official browser SDK docs and generated references for every child object, underscored member, and extension
+  global made private by this RFC. Existing v1 documentation should point to the v2 root replacement where one exists.
+- Generate and maintain a browser v1-to-v2 migration skill from the same API/config catalog used for references. The
+  skill should cover package installation, camelCase rewrites, async init, feature-flag truthiness, safety-key warnings,
+  and manual migrations that cannot be codemodded.
+- Keep the reference generator, migration skill, TypeScript declarations, and runtime migration warnings derived from
+  one machine-readable rename/removal catalog so they cannot drift independently.
+
+## Implementation checklist
+
+- [ ] Implement root `getFeatureFlag()` returning `FeatureFlagResult | undefined`; remove the other public read helpers.
+- [ ] Update `onFeatureFlags()` to emit `FeatureFlagResult[]` and `errorsLoading` while retaining update subscriptions.
+- [ ] Replace `advanced_disable_feature_flags` with `featureFlagEvaluation` and test the inverted boolean migration.
+- [ ] Remove `defaults` and `$config_defaults`; apply and test the complete v2 baseline.
+- [ ] Make async init queue supported root/snippet calls in order and safely discard them on initialization failure.
+- [ ] Rename `token` to `projectToken` in config while preserving wire/event `token` fields.
+- [ ] Rename every SDK-owned top-level and nested option key, backed by an exhaustive public-type audit.
+- [ ] Implement and test the safety-critical v1 key allowlist, precedence, and warning behavior.
+- [ ] Remove child implementation objects and private members from public types and the unmangled instance namespace.
+- [ ] Add the narrow `./internal` wrapper entrypoint and migrate wrapper SDKs away from `_overrideSDKInfo()`.
+- [ ] Keep product tours on the shared v1/v2 extension path.
+- [ ] Generate versioned v1/v2 references, run link validation, and publish the v1-to-v2 migration skill.
 
 ## Feedback requested
 
 @Team Client Libraries is the decision maker for this RFC. Feedback should focus on:
 
-- Known customer or wrapper SDK usage of removed aliases.
-- Any runtime aliases that are worth keeping for one compatibility release.
-- Whether nested config keys should be renamed in v2 or deferred.
+- Known customer or wrapper SDK usage of removed aliases or child objects.
+- Whether `featureFlagEvaluation` is the clearest positive name for controlling remote evaluation.
+- Whether the retained `onFeatureFlags(FeatureFlagResult[], errorsLoading)` subscription covers update use cases.
 - Any debug/test flag override use cases beyond `posthog.updateFlags(flags, payloads?, { merge })`.
-- Any migration risks around changed default behavior, bot pageviews, `sanitize_properties` / `$set_once`, or split
-  storage.
+- Any migration risks around async init queueing, changed baseline behavior, bot pageviews,
+  `sanitize_properties` / `$set_once`, privacy-key compatibility, or split storage.
