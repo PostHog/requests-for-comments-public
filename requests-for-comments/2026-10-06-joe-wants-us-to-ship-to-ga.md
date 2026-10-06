@@ -48,7 +48,7 @@ The problem isn't the word we’re using. It's that we’re not forcing ourselve
 
 I’m suggesting we put the following three rules into the handbook and into practice:
 
-- Each team can have one alpha or beta running at a time
+- Each team can have only one alpha or beta running at a time
 - You can't move an alpha to beta (or launch straight into beta) without a release date
 - Teams can't request marketing support for a beta without a release date
 
