@@ -50,7 +50,9 @@ I’m suggesting we put the following three rules into the handbook and into pra
 
 - Each team can have only one alpha or beta running at a time
 - You can't move an alpha to beta (or launch straight into beta) without a release date
-- Teams can't request marketing support for a beta without a release date
+- Teams can't request marketing support for an alpha or beta without a release date
+
+Release dates can be approximate, but they should be realistic and something the team has reasonable confidence in. 
 
 This works alongside Paul's proposal rather than against it. His component with built-in expiry is a good mechanism for enforcing the release date part of this.
 
