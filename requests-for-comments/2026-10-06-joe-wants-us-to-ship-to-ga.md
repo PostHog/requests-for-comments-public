@@ -97,7 +97,7 @@ Three alphas or betas (Desktop, MCP Analytics & Managed Data Warehouse) have a D
 
 ## Questions I've already been asked
 
-I raised this as a discussion at the marketing offsite last week and the AI offsite this week and her were some questions I got asked:
+I raised this as a discussion at the marketing offsite last week and the AI offsite this week and here were some questions I got asked:
 
 **"My team has more than one alpha or beta. Do I have to close some?"**
 
