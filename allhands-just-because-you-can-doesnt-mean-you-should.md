@@ -1,7 +1,7 @@
 
 # Request for comments: All-Hands change 
 
-TL;DR: Require our all-hands demos to be impact based, so demos are "Look at the impact I've made with doing X", not just "Behold, X".
+TL;DR: Push our all-hands demos to be impact based, so demos are "Look at the impact I've made with doing X", not just "Behold, X".
 
 ## Problem statement
 
