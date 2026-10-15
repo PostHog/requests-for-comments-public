@@ -52,7 +52,7 @@ We’ll view referrals as a paid platform in terms of management, and as a resul
 
 All cash would be paid out monthly and is facilitated through Dub’s platform. 
 
-The non-freemail filter is important, both from a QA perspective and also to avoid easy gaming of the system. We’re valuing this on the basis that non-freemail accounts can then become leads for Sales. 
+The non-freemail filter is important, both from a QA perspective and also to avoid easy gaming of the system. We’re valuing this on the basis that non-freemail accounts can then be subject to filtering and become leads for Sales. 
 
 Dub has a pretty comprehensive risk monitoring system which should help us spot gaming of the system, as well as the ability to set exclusion criteria on conversion events — so we can prevent users claiming duplicates by removing/adding cards repeatedly. 
 
