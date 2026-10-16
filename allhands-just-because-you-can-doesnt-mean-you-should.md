@@ -17,7 +17,7 @@ We know this is successful when;
   * Negative: conversion dropped, people hated it, tons of support tickets. Learning from mistakes is just as important as learning from successes.
 * Our people feel like our all-hands demos are impact & outcome based, not just "show and tell". 
 * Our people feel our bar for what we do is higher
-* Our presenter feels accoplished in what they've done for PostHog and our users.
+* Our presenter feels accoplished in what they've done for PostHog and our users, or that they've shared their learnings with others.
 * Our people watching the demo feels empowered/inspired to strive for better outcomes themselves.
 
 ## Context
