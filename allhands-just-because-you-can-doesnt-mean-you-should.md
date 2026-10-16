@@ -12,7 +12,9 @@ The bar for software has moved; PostHog's superpower was always "shipping & ship
 
 _How do we know if this is successful (i.e. metrics, customer feedback), what's out of scope, what makes this ambitious?_
 We know this is successful when; 
-* Our people see results in a demo, ie. a happy users tweet, metrics for that feature, and it's use, which all backup their reasoning for building said feature/thing.
+* Our people see results in a demo, either positive or negative. 
+  * Positive: a happy users tweet, metrics for that feature, and it's use, which all backup their reasoning for building said feature/thing.
+  * Negative: conversion dropped, people hated it, tons of support tickets. Learning from mistakes is just as important as learning from successes.
 * Our people feel like our all-hands demos are impact & outcome based, not just "show and tell". 
 * Our people feel our bar for what we do is higher
 * Our presenter feels accoplished in what they've done for PostHog and our users.
