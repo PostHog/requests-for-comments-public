@@ -27,6 +27,6 @@ We know this is successful when;
 
 ## Open questions
 * Is this detrimental to our culture?
-* Are we ostrasizing anyone by this change?
+* It seems like people self-police by seeing what gets great reactions and demoing stuff that rises to the occasion?
 * How do we want to actually push for this? Just update the all hands doc and announce it? 
 
