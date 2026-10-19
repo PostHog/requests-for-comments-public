@@ -301,6 +301,14 @@ authorization.write(
 )
 ```
 
+### Authorization availability fallback
+
+We will operate a separate authorization response cache in Redis, outside of OpenFGA. It will help keep the platform available if the OpenFGA infrastructure fails.
+
+The cache will be populated from authorization responses returned by OpenFGA, but will only be read as a fallback during those failures. Once the OpenFGA infrastructure recovers, OpenFGA will become the source of truth again for authorization requests. This is intended to prevent users from being completely locked out of the entire platform when the authorization infrastructure is unavailable.
+
+**Note: this does not guarantee perfect availability. It is meant to improve UX for customers during worse-case failure scenarios.**
+
 ### Gotcha: Django-isms
 
 The mega-brained reader will know that there is a lot of access control checks and enforcement which happens in Django-land. With the new Python SDK we will re-implement the many Django permission enforcement and utility classes to use the new Python SDK under the hood, instead of directly evaluating access control rules from the database.
