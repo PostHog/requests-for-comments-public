@@ -92,17 +92,9 @@ ReBAC solves the problem of access control by modeling access as a graph. A user
 
 For example, a user can edit a dashboard if they are a project admin, or they are an editor for dashboards, or they have edit permissions for that specific dashboard. In this example, the user's access to edit the dashboard is defined by their relationships to the dashboard and the project.
 
-### Implementations
+### Chosen implementation: OpenFGA
 
-[Zanzibar](https://storage.googleapis.com/gweb-research2023-media/pubtools/5068.pdf) is Google's in-house ReBAC implementation. It is used across hundreds of their products, including popular products like Google Docs. Zanzibar is the primary source of inspiration for nearly all modern ReBAC implementations.
-
-[OpenFGA](https://openfga.dev/) is a ReBAC implementation that is a CNCF incubation project, maintained by Okta and Grafana. It seems to be the most popular ReBAC implementation right now due to its cloud-native approach.
-
-[SpiceDB](https://authzed.com/spicedb) is an authorization database with support for ReBAC configuration. It is [open source](https://github.com/authzed/spicedb), under the Apache 2.0 License, and maintained by [AuthZed](https://authzed.com) who sell authorization as a service.
-
-[Permify](https://permify.co/) is an [open source](https://github.com/Permify/permify) ReBAC implementation that, like OpenFGA, aims to be cloud-native. It is  licensed under the APGL-3 license and maintained by [FusionAuth](https://fusionauth.io/) who sell authorization as a service.
-
-[Cedar](https://cedarpolicy.com) is an [open source]() policy engine that supports ReBAC authorization models. Unlike the other engines, it is very much bring your own batteries, requiring you to implement core ReBAC semantics. However, it can be embedded in existing programs and you provide your application code provides relationship data.
+We will use [OpenFGA](https://openfga.dev/) as our ReBAC engine. It is a cloud-native implementation with a mature ReBAC model and fits our goal of running authorization infrastructure ourselves. It also has a large ecosystem with well documented production use cases for companies at a similar and larger scale than PostHog.
 
 ### Pros & Cons
 
@@ -323,6 +315,13 @@ List operations introduce an additional challenge because our existing access co
 As we've scaled up the access coverage over more products, the data warehouse, properties, and new AI products, the current access control model has not scaled well. It has slowed down development, polluted some business logic with authorization code, and become difficult to reason about.
 
 ### Alternatives considered
+
+**Other ReBAC implementations**
+
+- [SpiceDB](https://authzed.com/spicedb) is an authorization database with support for ReBAC configuration. It is [open source](https://github.com/authzed/spicedb), under the Apache 2.0 License, and maintained by [AuthZed](https://authzed.com), which also offers authorization as a service.
+- [Permify](https://permify.co/) is an [open source](https://github.com/Permify/permify) ReBAC implementation that, like OpenFGA, aims to be cloud-native. It is licensed under the AGPL-3 license and maintained by [FusionAuth](https://fusionauth.io/), which offers authorization as a service.
+- [Cedar](https://cedarpolicy.com) is an open-source policy engine that supports ReBAC authorization models. Unlike the other engines, it requires us to implement core ReBAC semantics, though it can be embedded in existing programs.
+- [Zanzibar](https://storage.googleapis.com/gweb-research2023-media/pubtools/5068.pdf) is Google's in-house ReBAC implementation and the primary inspiration for most modern ReBAC implementations. It is not the selected engine.
 
 **ABAC**
 
