@@ -349,6 +349,16 @@ The python SDK will control rollout of ReBAC backed access control. Initially, w
 
 This flag will have multiple variants: `off`, `shadow-log`, `rebac`. In `off`, only the existing Python logic is used. In `shadow-log` the existing Python is used as the authoritative answer, but a request is made to the ReBAC service in parallel and that result is logged against the result returned by the Python implementation. In `rebac`, the ReBAC service's response is used as the authoritative answer, and the Python implementation's response is logged.
 
+### Initial load test and rollout
+
+Before routing production traffic to OpenFGA, we will:
+
+1. Deploy a set of OpenFGA pods.
+2. Add a Django management command that generates authorization requests for load testing.
+3. Run the command from a devbox to measure OpenFGA's capacity under load.
+4. Calculate the number of pods needed from the test results and update the scaling configuration to ensure that capacity is available.
+5. Gradually route traffic to the `rebac` variant of the rollout flag, monitoring metrics to confirm OpenFGA has sufficient compute capacity.
+
 ### What about the data model?
 
 In the first iteration we will maintain the existing data model by implementing a dual write system for object permissions. However, once the migration is complete we may re-evaluate this and opt to use the ReBAC service as the canonical source of truth for authorization policies, including those that we display in the UI and allow customers to configure.
