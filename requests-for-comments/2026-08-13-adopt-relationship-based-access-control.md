@@ -96,6 +96,10 @@ For example, a user can edit a dashboard if they are a project admin, or they ar
 
 We will use [OpenFGA](https://openfga.dev/) as our ReBAC engine. It is a cloud-native implementation with a mature ReBAC model and fits our goal of running authorization infrastructure ourselves. It also has a large ecosystem with well documented production use cases for companies at a similar and larger scale than PostHog.
 
+### OpenFGA database
+
+We will use a standalone PostgreSQL database for OpenFGA, rather than creating a separate schema in our existing PostgreSQL database. This follows [OpenFGA's production database recommendations](https://openfga.dev/docs/best-practices/running-in-production#database-recommendations) and helps isolate critical infrastructure components.
+
 ### Pros & Cons
 
 **Pros**
