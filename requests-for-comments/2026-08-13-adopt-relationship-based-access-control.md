@@ -115,6 +115,15 @@ We will add a dedicated migration track for OpenFGA, separate from the Postgres 
 1. Run OpenFGA's PostgreSQL migrations, creating the required tables and indexes.
 2. Upload the authorization model and set it as the current model version when the current model in OpenFGA differs from the model version in code.
 
+### Security hub
+
+We will add an authorization section to the security hub with tools to:
+
+- Force-sync tuples from the primary PostgreSQL database into OpenFGA.
+- Manually create or remove tuples in OpenFGA for one-off customer authorization scenarios or to fix incorrect tuples.
+- Run one-off authorization checks and explain the results of authorization decisions.
+- Anything else that will be helpful to debug or fix customer issues.
+
 ### Pros & Cons
 
 **Pros**
