@@ -11,7 +11,6 @@ Our access control model no longer scales with our access control needs. As we a
 
 The current access control implementation is hard to develop for, fragile, and difficult to audit, because of the following reasons.
 
-
 ### Access control logic spread across different places
 
 The logic that evaluates access control rules is spread across many places in the codebase. For example:
@@ -365,7 +364,7 @@ As we've scaled up the access coverage over more products, the data warehouse, p
 - [SpiceDB](https://authzed.com/spicedb) is an authorization database with support for ReBAC configuration. It is [open source](https://github.com/authzed/spicedb), under the Apache 2.0 License, and maintained by [AuthZed](https://authzed.com), which also offers authorization as a service.
 - [Permify](https://permify.co/) is an [open source](https://github.com/Permify/permify) ReBAC implementation that, like OpenFGA, aims to be cloud-native. It is licensed under the AGPL-3 license and maintained by [FusionAuth](https://fusionauth.io/), which offers authorization as a service.
 - [Cedar](https://cedarpolicy.com) is an open-source policy engine that supports ReBAC authorization models. Unlike the other engines, it requires us to implement core ReBAC semantics, though it can be embedded in existing programs.
-- [Zanzibar](https://storage.googleapis.com/gweb-research2023-media/pubtools/5068.pdf) is Google's in-house ReBAC implementation and the primary inspiration for most modern ReBAC implementations. It is not the selected engine.
+- [Zanzibar](https://storage.googleapis.com/gweb-research2023-media/pubtools/5068.pdf) is Google's in-house ReBAC implementation and the primary inspiration for most modern ReBAC implementations. But obviously we can't use it, because it is a closed-source internal Google product.
 
 **ABAC**
 
@@ -430,11 +429,11 @@ We need an new on-call schedule and escalation path for the platform features te
 
 ## Sprints
 
-1. Research ReBAC frameworks, benchmark them, and select final option
-2. Implement python authorization SDK using existing access control code
-3. Implement access control decision logging
-4. Set up ReBAC infra in prod, update local dev stack, update self-hosted stuff
-5. Implement ReBAC backed access control behind a feature flag, add ReBAC decisions to access control logging
-6. Verify existing access control and ReBAC access control agree on authorization decisions
-7. Begin phased rollout of ReBAC
-8. Remove old access control logic and make new ReBAC approach source of truth
+1. Implement python authorization SDK using existing access control code.
+2. Update existing enforcement points in the Python code to use the new SDK instead of the old `UserAccessControl` interface and friends.
+3. Implement access control decision logging and metric spans.
+4. Set up ReBAC infra in prod, update local dev stack, update self-hosted configuration.
+5. Implement ReBAC backed access control behind a feature flag, add ReBAC decisions to access control logging.
+6. Verify existing access control and ReBAC access control agree on authorization decisions.
+7. Begin phased rollout of ReBAC.
+8. Remove old access control logic and make new ReBAC approach source of truth.
