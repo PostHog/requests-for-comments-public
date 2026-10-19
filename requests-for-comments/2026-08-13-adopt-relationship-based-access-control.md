@@ -100,6 +100,14 @@ We will use [OpenFGA](https://openfga.dev/) as our ReBAC engine. It is a cloud-n
 
 We will use a standalone PostgreSQL database for OpenFGA, rather than creating a separate schema in our existing PostgreSQL database. This follows [OpenFGA's production database recommendations](https://openfga.dev/docs/best-practices/running-in-production#database-recommendations) and helps isolate critical infrastructure components.
 
+### Authorization model preprocessor
+
+We will build a small preprocessor language on top of the FGA modeling language. It will be a slight extension of FGA, not an entirely new language. Our complex authorization model and the large number of resources requiring coverage would make manually writing every definition excessively verbose. The preprocessor will let us:
+
+- Inherit definitions from common types for patterns such as sharing, project-tenancy checks, and typical resource access control.
+- Override inherited definitions for resources with special behavior, such as being private by default.
+- Organize definitions across multiple files.
+
 ### Pros & Cons
 
 **Pros**
