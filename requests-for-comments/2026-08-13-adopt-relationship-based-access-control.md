@@ -313,6 +313,10 @@ The cache will be populated from authorization responses returned by OpenFGA, bu
 
 We will capture authorization metrics from OpenFGA's built-in OpenTelemetry integration and add spans in the Python code to measure the end-to-end latency of authorization calls. We will also create alerts for when these metrics breach defined latency or availability thresholds.
 
+### Keeping the authorization facade focused
+
+We will add lint rules for the authorization facade to prevent new exported functions from being added. We will also update `AGENTS.md` and skills files with instructions for agents on how to use the authorization interface without bloating the SDK. When specific functionality is needed, implement it at the point of use or make the necessary authorization-modeling changes rather than expanding the facade with one-off helpers.
+
 ### Gotcha: Django-isms
 
 The mega-brained reader will know that there is a lot of access control checks and enforcement which happens in Django-land. With the new Python SDK we will re-implement the many Django permission enforcement and utility classes to use the new Python SDK under the hood, instead of directly evaluating access control rules from the database.
