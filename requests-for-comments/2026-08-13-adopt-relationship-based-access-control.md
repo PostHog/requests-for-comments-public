@@ -108,6 +108,13 @@ We will build a small preprocessor language on top of the FGA modeling language.
 - Override inherited definitions for resources with special behavior, such as being private by default.
 - Organize definitions across multiple files.
 
+### OpenFGA migrations
+
+We will add a dedicated migration track for OpenFGA, separate from the Postgres and Clickhouse migrations. It will be run with `hogli migrations:openfga` and will:
+
+1. Run OpenFGA's PostgreSQL migrations, creating the required tables and indexes.
+2. Upload the authorization model and set it as the current model version when the current model in OpenFGA differs from the model version in code.
+
 ### Pros & Cons
 
 **Pros**
