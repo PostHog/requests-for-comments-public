@@ -371,9 +371,13 @@ In the first iteration we will maintain the existing data model by implementing 
 
 We will block this initiative on most-specific access control being shipped. Maintaining two big access control changes at once would be too difficult.
 
+### Fine-grained access control only
+
+This system is for fine-grained access control checks, not coarser authorization questions. Coarse checks such as API key scopes will continue to be handled by middleware and their existing mechanisms.
+
 ### What authorization questions are in or out of scope?
 
-The goal is that all authorization questions are answered by the new engine. For example, this includes:
+The goal is for the new engine to answer fine-grained authorization questions. For example, this includes:
 
 1. Organization and project access
 2. Contextual policies (i.e. timestmap, risk, etc.)
