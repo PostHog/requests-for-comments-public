@@ -309,6 +309,10 @@ The cache will be populated from authorization responses returned by OpenFGA, bu
 
 **Note: this does not guarantee perfect availability. It is meant to improve UX for customers during worse-case failure scenarios.**
 
+### Observability
+
+We will capture authorization metrics from OpenFGA's built-in OpenTelemetry integration and add spans in the Python code to measure the end-to-end latency of authorization calls.
+
 ### Gotcha: Django-isms
 
 The mega-brained reader will know that there is a lot of access control checks and enforcement which happens in Django-land. With the new Python SDK we will re-implement the many Django permission enforcement and utility classes to use the new Python SDK under the hood, instead of directly evaluating access control rules from the database.
