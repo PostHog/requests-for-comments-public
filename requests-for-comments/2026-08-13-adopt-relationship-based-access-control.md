@@ -311,7 +311,7 @@ The cache will be populated from authorization responses returned by OpenFGA, bu
 
 ### Observability
 
-We will capture authorization metrics from OpenFGA's built-in OpenTelemetry integration and add spans in the Python code to measure the end-to-end latency of authorization calls.
+We will capture authorization metrics from OpenFGA's built-in OpenTelemetry integration and add spans in the Python code to measure the end-to-end latency of authorization calls. We will also create alerts for when these metrics breach defined latency or availability thresholds.
 
 ### Gotcha: Django-isms
 
