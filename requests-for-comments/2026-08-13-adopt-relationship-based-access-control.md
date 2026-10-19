@@ -366,6 +366,10 @@ No, I think we should avoid this, and remain cloud-native since this is core inf
 
 Platform features would be responsible for maintaining, monitoring, scaling, and on-call response.
 
+### On-call and escalation
+
+We need an new on-call schedule and escalation path for the platform features team so we can respond to issues with the authorization infrastructure.
+
 ## Sprints
 
 1. Research ReBAC frameworks, benchmark them, and select final option
