@@ -113,6 +113,7 @@ We will add a dedicated migration track for OpenFGA, separate from the Postgres 
 
 1. Run OpenFGA's PostgreSQL migrations, creating the required tables and indexes.
 2. Upload the authorization model and set it as the current model version when the current model in OpenFGA differs from the model version in code.
+3. Run any data migrations which might update the relationship graph in OpenFGA.
 
 ### Security hub
 
@@ -138,7 +139,7 @@ We will add an authorization section to the security hub with tools to:
 
 - *More complex architecture* - Requires an additional service deployed to the cluster, with its own data store.
 - *Potential for higher latency* - It is possible that there is more network or computational overhead for each authorization request.
-- *ReBAC graph could become inconsistent with DB state* - We need to make sure CRUD operations to DB objects are synchronized with the ReBAC graph, and we need to develop tools to respond to potential incidents where ReBAC graph state drifts and becomes inconsistent with the DB.
+- *ReBAC graph could become inconsistent with DB state* - We need to make sure CRUD operations to DB objects are synchronized with the ReBAC graph, and we need to develop tools to respond to potential incidents where ReBAC graph state drifts and becomes inconsistent with the DB. However, once we are fully migrated onto OpenFGA, it will become the source of truth for access control rules. The Postgres-backed access control rule table will be deprecated, and eventually removed.
 
 ## Design 
 *What are the key user experience and technical design decisions / trade-offs?*
@@ -334,6 +335,8 @@ We will operate a separate authorization response cache in Redis, outside of Ope
 
 The cache will be populated from authorization responses returned by OpenFGA, but will only be read as a fallback during those failures. Once the OpenFGA infrastructure recovers, OpenFGA will become the source of truth again for authorization requests. This is intended to prevent users from being completely locked out of the entire platform when the authorization infrastructure is unavailable.
 
+We will additionally need to invalidate certain sections of the cache when access control rules are updated. For example, when a project's rules are updated, we should invalidate all of the cached access control decisions in the cache.
+
 **Note: this does not guarantee perfect availability. It is meant to improve UX for customers during worse-case failure scenarios.**
 
 ### Observability
@@ -413,7 +416,7 @@ The goal is for the new engine to answer fine-grained authorization questions. F
 1. Organization and project access
 2. Contextual policies (i.e. timestmap, risk, etc.)
 3. Subject-policies (i.e. token type, mcp user agent, non-user subject, etc.)
-4. Feature entitlement
+4. Feature entitlement checks (note: the billing service will remain the source of truth for feature entitlements)
 
 ### New vendor?
 
@@ -433,7 +436,9 @@ We need an new on-call schedule and escalation path for the platform features te
 2. Update existing enforcement points in the Python code to use the new SDK instead of the old `UserAccessControl` interface and friends.
 3. Implement access control decision logging and metric spans.
 4. Set up ReBAC infra in prod, update local dev stack, update self-hosted configuration.
-5. Implement ReBAC backed access control behind a feature flag, add ReBAC decisions to access control logging.
-6. Verify existing access control and ReBAC access control agree on authorization decisions.
-7. Begin phased rollout of ReBAC.
-8. Remove old access control logic and make new ReBAC approach source of truth.
+5. Create cronjob and django management command to start syncing relationship graph into OpenFGA.
+6. Implement ReBAC backed access control behind a feature flag, add ReBAC decisions to access control logging.
+7. Verify existing access control and ReBAC access control agree on authorization decisions.
+8. Monitor authorization decisions for 2-4 weeks.
+9. Begin phased rollout of ReBAC.
+10. Remove old access control logic and make new ReBAC approach source of truth.
