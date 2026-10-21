@@ -148,186 +148,150 @@ We will adopt a ReBAC framework, then expose a minimal Python SDK for clients to
 
 ### Python SDK
 
-I propose the following approximate Python SDK.
+The authorization facade is the only module other products may import. It accepts immutable data contracts and enums, and does not expose ORM instances or DRF types. The examples below describe how clients use the facade; they do not prescribe its implementation.
 
 ```python
 from posthog import authorization
 
-# Check if a user can perform an action on a resource
-can_access = authorization.check(subject=..., resource=..., action=...)
+# Check one resource, or check several requests in one call.
+can_edit = authorization.check(resource=dashboard, action=edit_action, subject=subject)
+results = authorization.check([
+    authorization.CheckRequest(resource=dashboard, action=view_action, subject=subject),
+    authorization.CheckRequest(resource=another_dashboard, action=view_action, subject=subject),
+])
 
-# Same as `authorization.check(...)`, but performs multiple checks in bulk
-can_access = authorization.check(
-    [
-        authorization.CheckRequest(subject=..., resource=..., action=...),
-        authorization.CheckRequest(subject=..., resource=..., action=...),
-    ]
+# Ask which actions are allowed on a resource.
+allowed_actions = authorization.permissions(resource=dashboard, subject=subject)
+
+# List accessible object IDs and subjects who can access a resource.
+object_ids = authorization.list_objects(
+    resource=project_dashboards, action=view_action, subject=subject
 )
-
-# Enumerate a user's permissions for a resource
-permissions = authorization.permissions(subject=..., resource=...)
-
-# Enumerate resources a user can access
-accessible_resources = authorization.list_resources(subject=..., resource=..., action=...)
-
-# Enumerate users who can access a resource
-authorized_users = authorization.list_subjects(resource=..., action=..., subject=...)
-
-# Generic utility for upserting and deleting relationships in bulk
-authorization.write(
-    [
-        authorization.AddRelationshipRequest(subject=..., resource=..., action=...),
-        authorization.DeleteRelationshipRequest(subject=..., resource=..., action=...),
-    ]
-)
-
-# Special function to inspect the graph. Returns the existence of the (subject, resource, action) tuple in the graph, NOT whether the user has access
-# Should only be used by APIs that explicitly need to check for specific relations like sharing UIs, for example.
-# Prefixed with `dangerous_` to avoid accidental use
-authorization.dangerous_query_relation(subject=..., resource=..., action=...)
-
-# Debug function for PostHog admins. If decision is to allow, returns context for what relations were involved in that decision being made.
-authorization.dangerous_explain(authorization.CheckRequest())
-```
-
-**For example, here are what some common access control operations might look like using this SDK.**
-
-```python
-from posthog import authorization
-
-# check if user can access dashboard
-can_access = authorization.check(
-    subject=authorization.Subject(user_id=user.pk), # ex: "user:{user.pk}"
-    resource=authorization.Resource(type=authorization.ResourceType.Dashboard, id=dashboard.pk), # ex: "dashboard:{dashboard.pk}"
-    action=authorization.Action.Edit,
-)
-assert can_access is False
-
-# grant user read and write access to dashboard
-authorization.write(
-    [
-        authorization.AddRelationshipRequest(
-            subject=authorization.Subject(user_id=user.pk),
-            resource=authorization.Resource(type=authorization.ResourceType.Dashboard, id=dashboard.pk),
-            action=authorization.Action.View,
-        ),
-        authorization.AddRelationshipRequest(
-            subject=authorization.Subject(user_id=user.pk),
-            resource=authorization.Resource(type=authorization.ResourceType.Dashboard, id=dashboard.pk),
-            action=authorization.Action.Edit,
-        ),
-    ]
-)
-
-# check if user can access dashboard
-can_access = authorization.check(
-    subject=authorization.Subject(user_id=user.pk),
-    resource=authorization.Resource(type=authorization.ResourceType.Dashboard, id=dashboard.pk),
-    action=authorization.Action.Edit,
-)
-assert can_access is True
-
-# remove user's edit access from the dashboard
-authorization.write(
-    authorization.DeleteRelationshipRequest(
-        subject=authorization.Subject(user_id=user.pk),
-        resource=authorization.Resource(type=authorization.ResourceType.Dashboard, id=dashboard.pk),
-        action=authorization.Action.Edit,
-    ),
-)
-
-# let user's list all dashboards in their project
-authorization.write(
-    [
-        authorization.AddRelationshipRequest(
-            subject=authorization.Subject(user_id=user.pk),
-            resource=authorization.Resource(type=authorization.ResourceType.Dashboard, project_id=project.pk), # ex: "project:{project.pk}:dashboard"
-            action=authorization.Action.List,
-        ),
-    ]
-)
-
-# check if a user can list dashboards
-can_access = authorization.check(
-    subject=authorization.Subject(user_id=user.pk),
-    resource=authorization.Resource(type=authorization.ResourceType.Dashboard, project_id=project.pk),
-    action=authorization.Action.List,
-)
-assert can_access is True
-
-# check if a user can create dashboards
-can_access = authorization.check(
-    subject=authorization.Subject(user_id=user.pk),
-    resource=authorization.Resource(type=authorization.ResourceType.Dashboard, project_id=project.pk),
-    action=authorization.Action.Create,
-)
-assert can_access is False
-
-# check if a user can view a dashboard that they have not been explicitly given access to
-can_access = authorization.check(
-    subject=authorization.Subject(user_id=user.pk),
-    resource=authorization.Resource(type=authorization.ResourceType.Dashboard, id=other_dashboard.pk),
-    action=authorization.Action.View,
-)
-assert can_access is True
-
-# check if a user can access a bunch of different dashboards
-dashboards = [dashboard, other_dashboard_1, other_dashboard_2]
-can_access = authorization.check(
-    [
-        authorization.CheckRequest(
-            subject=authorization.Subject(user_id=user.pk),
-            resource=authorization.Resource(type=authorization.ResourceType.Dashboard, id=dashboards[0].pk),
-            action=authorization.Action.View,
-        ),
-        authorization.CheckRequest(
-            subject=authorization.Subject(user_id=user.pk),
-            resource=authorization.Resource(type=authorization.ResourceType.Dashboard, id=dashboards[1].pk),
-            action=authorization.Action.View,
-        ),
-        authorization.CheckRequest(
-            subject=authorization.Subject(user_id=user.pk),
-            resource=authorization.Resource(type=authorization.ResourceType.Dashboard, id=dashboards[2].pk),
-            action=authorization.Action.View,
-        ),
-    ]
-)
-assert can_access == [True, False, False]
-
-# see what a user can do for a particular dashboard
-permissions = authorization.permissions(
-    subject=authorization.Subject(user_id=user.pk),
-    resource=authorization.Resource(type=authorization.ResourceType.Dashboard, id=dashboard.pk),
-)
-assert permissions == [authorization.Action.View]
-
-# see what dashboards a user can access
-resources = authorization.list_resources(
-    subject=authorization.Subject(user_id=user.pk),
-    resource=authorization.Resource(type=authorization.ResourceType.Dashboard, project_id=project.pk),
-    action=authorization.Action.View,
-)
-assert resources == [authorization.Resource(type=authorization.ResourceType.Dashboard, id=dashboard.pk)]
-
-# see who can access a dashboard
 subjects = authorization.list_subjects(
-    subject=authorization.Subject(type=authorization.SubjectType.User),
-    resource=authorization.Resource(type=authorization.ResourceType.Dashboard, id=dashboard.pk),
-    action=authorization.Action.View,
+    resource=dashboard, action=view_action, subject_type=user_type
 )
-assert subjects == [authorization.Subject(user_id=user.pk)]
 
-# Bring together role-based access control, data warehouse table access control, and relationship based access control into one beautiful access control graph
-authorization.write(
-    [
-        authorization.AddRelationshipRequest(
-            subject=authorization.Subject(role=role, project_id=project.pk), # ex: "project:{project.pk}:role:{role.pk}"
-            resource=DataWarehouseTableResource(project_id=project.pk, table="postgres.stripe_invoices"), # ex: "project:{project.pk}:data_warehouse_table:postgres.stripe_invoices"
-            action=authorization.Action.View,
-        ),
-    ]
+# Grant and revoke relationships in one batch.
+authorization.write([
+    authorization.AddRelationshipRequest(
+        subject=subject, resource=dashboard, action=view_action
+    ),
+    authorization.DeleteRelationshipRequest(
+        subject=another_subject, resource=dashboard, action=edit_action
+    ),
+])
+
+# Inspect a relation or explain a decision for debugging and access-rule editors only.
+has_edit_relation = authorization.dangerous_query_relation(
+    subject=subject, resource=dashboard, level=edit_level
 )
+explanation = authorization.dangerous_explain(check_request)
 ```
+
+For example, common access-control operations could use the facade like this:
+
+```python
+# A subject cannot edit a dashboard until granted access.
+can_edit = authorization.check(
+    resource=dashboard, action=edit_action, subject=subject
+)
+assert can_edit is False
+
+# Grant view and edit access, then check the result.
+authorization.write([
+    authorization.AddRelationshipRequest(
+        subject=subject, resource=dashboard, action=view_action
+    ),
+    authorization.AddRelationshipRequest(
+        subject=subject, resource=dashboard, action=edit_action
+    ),
+])
+assert authorization.check(
+    resource=dashboard, action=edit_action, subject=subject
+) is True
+
+# Revoke edit access while retaining view access.
+authorization.write([
+    authorization.DeleteRelationshipRequest(
+        subject=subject, resource=dashboard, action=edit_action
+    ),
+])
+assert authorization.check(
+    resource=dashboard, action=edit_action, subject=subject
+) is False
+
+# A project-level list grant permits listing without granting creation.
+authorization.write([
+    authorization.AddRelationshipRequest(
+        subject=subject, resource=project_dashboards, action=list_action
+    ),
+])
+assert authorization.check(
+    resource=project_dashboards, action=list_action, subject=subject
+) is True
+assert authorization.check(
+    resource=project_dashboards, action=create_action, subject=subject
+) is False
+
+# Project defaults may allow viewing another dashboard without an object-level grant.
+assert authorization.check(
+    resource=another_dashboard, action=view_action, subject=subject
+) is True
+
+# Batch checks preserve request order; permissions enumerate allowed actions.
+results = authorization.check([
+    authorization.CheckRequest(
+        resource=dashboard, action=view_action, subject=subject
+    ),
+    authorization.CheckRequest(
+        resource=dashboard, action=edit_action, subject=subject
+    ),
+    authorization.CheckRequest(
+        resource=restricted_dashboard, action=view_action, subject=subject
+    ),
+])
+assert results == [True, False, False]
+assert authorization.permissions(
+    resource=dashboard, subject=subject
+) == {view_action}
+
+# Get IDs for filtering a project listing, or subjects who can view one dashboard.
+accessible_ids = authorization.list_objects(
+    resource=project_dashboards, action=view_action, subject=subject
+)
+viewers = authorization.list_subjects(
+    resource=dashboard, action=view_action, subject_type=user_type
+)
+
+# The same relationship API can grant a project role access to a data warehouse table.
+authorization.write([
+    authorization.AddRelationshipRequest(
+        subject=project_role,
+        resource=data_warehouse_table,
+        action=view_action,
+    ),
+])
+
+# These inspection helpers are for access-rule editors and debugging, not enforcement.
+has_direct_relation = authorization.dangerous_query_relation(
+    subject=subject, resource=dashboard, level=edit_level
+)
+explanation = authorization.dangerous_explain(check_request)
+```
+
+Batch checks return one boolean per request in input order. Until request-context binding is available, callers must supply the subject explicitly. `list_objects` returns project-scoped IDs; view/query results may represent included or excluded IDs, and incomplete results allow no objects. `dangerous_` operations inspect relations or explain decisions; authorization decisions must use `check`.
+
+Supporting operations provide a request-scoped session for reusing legacy lookups, synchronize an organization's authorization graph with committed database state, and report OpenFGA status:
+
+```python
+with authorization.authorization_session():
+    ...
+
+authorization.synchronize_organization(organization_id)
+status = authorization.get_openfga_status()
+```
+
+The session reuses legacy lookups within a request; it does not cache OpenFGA decisions.
 
 ### Authorization availability fallback
 
