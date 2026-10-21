@@ -361,10 +361,6 @@ Before routing production traffic to OpenFGA, we will:
 4. Calculate the number of pods needed from the test results and update the scaling configuration to ensure that capacity is available.
 5. Gradually route traffic to the `rebac` variant of the rollout flag, monitoring metrics to confirm OpenFGA has sufficient compute capacity.
 
-### What about the data model?
-
-In the first iteration we will maintain the existing data model by implementing a dual write system for object permissions. However, once the migration is complete we may re-evaluate this and opt to use the ReBAC service as the canonical source of truth for authorization policies, including those that we display in the UI and allow customers to configure.
-
 ### Most specific access control?
 
 We will block this initiative on most-specific access control being shipped. Maintaining two big access control changes at once would be too difficult.
