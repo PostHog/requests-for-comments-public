@@ -4,6 +4,11 @@
 
 > [!NOTE]
 > **This RFC is a partial solution to get incrementally better, rather than the whole fix.** The full fix takes generated references, PR-driven maintenance like John's work on Knowledge Writer, occasional spring cleaning, and evals over these facts. We'll also need future work to design docs for agents and move conceptual `/learn` content out for humans.
+>
+> **PoC results aren't final.** Every number, mapping, and screenshot in this RFC and its addendums tests whether the concept is valuable, rather than whether it's production-ready. Solid numbers and mappings still need:
+> - **All SDKs and services indexed.** PostHog products intersect across repo and product boundaries, so partial indexes miss real behavior.
+> - **Crawling, splitting, and mapping fixed.** All three stages still have remaining bugs.
+> - **Retrieval, extraction, and verification optimized.** Each still needs substantial work.
 
 **Contents:**
 
@@ -219,6 +224,8 @@ You don't need to check `master` on every PR. `repo commit` is detached from `fu
 
 ![Surgical blast radius: 1 edited function flags 1 doc line while 2,545 stay fresh](images/d4b-surgical-blast-radius.png)
 
+**PoC note:** These replay and blast-radius numbers are early checks, rather than final metrics. Full SDK indexing, crawling and mapping bug fixes, and verification tuning will still shift them.
+
 Most code doesn't change between PRs, so only modified hashes plus new or removed exports wake an agent pass.
 
 For direct human `.mdx` edits, a text-matching script re-anchors unchanged claims and marks edited lines `unverified_human` rather than blocking PRs.
@@ -273,6 +280,8 @@ A surface-sliced skill (`11.7 KB`) cuts context by **97.3% (38x)** vs the 34-pag
 
 Every `UC-*` skill is self-contained and runnable, so we can test docs against live PostHog instances. Five blinded Devbox runs ([`UC-1`](https://docs-coverage.hosthog.dev/#tool/surveys?tab=use-cases&q=UC-1), [`UC-3`](https://docs-coverage.hosthog.dev/#tool/surveys?tab=use-cases&q=UC-3), [`UC-4`](https://docs-coverage.hosthog.dev/#tool/surveys?tab=use-cases&q=UC-4), [`UC-5`](https://docs-coverage.hosthog.dev/#tool/surveys?tab=use-cases&q=UC-5) + [`UC-12`](https://docs-coverage.hosthog.dev/#tool/surveys?tab=use-cases&q=UC-12), and [`UC-8`](https://docs-coverage.hosthog.dev/#tool/surveys?tab=use-cases&q=UC-8)) caught real extractor and docs gaps before anything shipped ([Addendum 1](addendum-01-live-skill-tests.md)).
 
+**PoC note:** These Devbox runs and size ratios aren't final. Partial repo indexes, crawling and splitting bugs, and rough extraction still limit the compiled skills.
+
 ### 6.1 Trade-off: ugly skills aren't human-readable and still need tight slicing
 
 Compiled skills trade human readability for token efficiency, so they can't replace human docs. Unsliced 8-surface dumps also bloat to `4,407` to `9,170` lines ([Addendum 1](addendum-01-live-skill-tests.md), [Addendum 3](addendum-03-dewey-catalog-and-pipeline.md)), so agents need surface-sliced skills by default.
@@ -311,6 +320,8 @@ Two identical read-only `flash` agents ran the same 3-part Surveys audit against
 - **With derived knowledge:** Opened **66% fewer files (`12`)**, used **40% fewer tokens (`280K`)**, and finished **25% faster (`4.8 min`)**. Caught all 4 mobile SDKs, every affected page, and every existing bug.
 - **Remaining gap:** Still spent 33 turns querying raw `1.1 MB` JSON files with ad-hoc scripts. A thin lookup CLI fixes that.
 
+**PoC note:** This single A/B run isn't a final benchmark. The numbers come from a partial index with unfixed mapping bugs and untuned retrieval and verification.
+
 ### 8.2 Early signal: 8-week stateful PR maintenance replay (`mcp-analytics`)
 
 Two Claude Code SDK agents (`claude-sonnet-5-5`, medium effort) maintained real copies of `contents/docs/mcp-analytics/*.mdx` across **8 weeks of history**, from October 3 to November 23, 2026 ([Addendum 5](addendum-05-claude-sdk-agent-repro.md), [`stateful-ia-engine.mjs`](https://github.com/PostHog/context-mill/pull/574/files#diff-f4ad5aa6d6e9e0201122bb7cbbef5d1c7d6a00d4a6ca17ed59ba63ce5f1eeaa5R1-R50), [`stateful-8wk-benchmark.mjs`](https://github.com/PostHog/context-mill/pull/574/files#diff-dd4fbd2b06a12b23d36e0144d882dcf24321c95bd6ec6f47f3221ed25e12da60R1-R50), [`stateful-8wk-scorecard.json`](https://github.com/PostHog/context-mill/pull/575/files#diff-78497f8e6fb63b80d36a37600eac9ffe1661e543ca594329a170b931f7d30eb4R1-R50)). They replayed `46` real code PRs, `3` real human docs PRs, and `4` planted hard PRs in order, and each carried its own edits forward:
@@ -318,6 +329,8 @@ Two Claude Code SDK agents (`claude-sonnet-5-5`, medium effort) maintained real 
 - **Higher accuracy, half the false positives.** Read/write IA tools and a 4-step decision tree raised PR decision accuracy from `82.0%` to **`90.0%`** (`F1` `0.862` to **`0.918`**). False-positive PRs dropped in half (`8` to **`4`**), edited-page F1 rose from `0.716` to **`0.776`**, and open doc drift fell from `15` to **`11`**.
 - **Self-maintained IA over two months.** On October 3, the IA had `0` WebMCP and `0` Rust SDK facts. The agent updated `74` facts, retired `43` with tombstones, mapped `56` new ones (including both brand-new surfaces), and updated or minted `76` claim bindings. It deferred `2` unreleased feature flags and reconciled all `3` human docs PRs, both with `0` LLM calls.
 - **Caveats and remaining gaps.** Both arms ran Sonnet on medium effort (`claude-sonnet-5-5`). Opus on medium with the IA would likely catch more. Fable on high, extra-high, or max effort with no guidance could still beat these scores. That's not the point: the IA is an economical, repeatable assistance tool for cheaper agents. IA maintenance added `6.5s` per PR (`17.9s` vs `11.4s`), and live on-disk factual checks finished tied (`34/41`). Both arms also missed secondary pages on multi-surface features like custom harnesses (`posthog#124838`).
+
+**PoC note:** These replay scores only test one product, so they aren't final. Cross-repo indexing, crawling and mapping fixes, and retrieval, extraction, and verification tuning aren't done yet.
 
 ## 9. Scope and Phase 1 payoff
 
@@ -328,6 +341,8 @@ A product's IA exposes contradictions, SDK parity gaps, and undocumented workflo
 1. **Surface-coded IA across 5 repos.** `2,548` verified symbol anchors across `posthog`, `posthog-js`, `posthog-ios`, `posthog-android`, and `posthog-flutter`, 3 shared `platform-*` seams, `62` procedures across 8 surfaces, and `15` compiled one-pager skills.
 2. **Live docs map and coverage leaderboard ([docs-coverage.hosthog.dev](https://docs-coverage.hosthog.dev/#leaderboard)).** All 34 Surveys pages on `posthog.com` `master`: `59%` unit coverage, `56%` 1-hop line coverage, `61%` accuracy, `17` confirmed contradictions, and `0` false positives.
 3. **7-PR Surveys docs and evals stack (`#22896` to `#22902`).** Fixes all 17 contradictions, adds the generated SDK parity matrix, documents missing API/MCP/Workflow surfaces, and adds 11 executable `.eval.yaml` suites.
+
+**PoC note:** Surveys crosses unindexed SDK and service boundaries, so these numbers aren't final. Crawling and splitting bugs plus untuned retrieval, extraction, and verification still affect them.
 
 Phase 1 builds the IA across our remaining public products to find gaps and update docs, then measures how well maintenance holds up over time.
 
@@ -343,7 +358,7 @@ If maintenance stays cheap, Phase 2 integrates this data and claim tools into PR
 
 ## 10. POC addendums
 
-POC evidence lives in this folder:
+POC evidence lives in this folder. All six addendums test whether the concept is valuable, rather than whether it's production-ready:
 
 - [Addendum 1: Live skill tests on PostHog](addendum-01-live-skill-tests.md). Five blinded devbox runs from compiled skills only, screenshots, and the extractor gaps they exposed.
 - [Addendum 2: Live docs mapping and contradiction proof](addendum-02-docs-mapping-and-pins.md). 34-page `posthog.com` Surveys audit, surface scorecard, and all 17 confirmed contradictions with code pins.

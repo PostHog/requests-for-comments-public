@@ -1,5 +1,11 @@
 # Addendum 1: Live skill tests on PostHog
 
+> [!NOTE]
+> **PoC results aren't final.** These live skill runs and screenshots test whether the concept is valuable, rather than whether it's production-ready. Solid results and mappings still need:
+> - **All SDKs and services indexed.** PostHog products intersect across repo and product boundaries, so partial indexes miss real behavior.
+> - **Crawling, splitting, and mapping fixed.** All three stages still have remaining bugs.
+> - **Retrieval, extraction, and verification optimized.** Each still needs substantial work.
+
 We tested whether an agent can use our raw compiled skills to build and verify real Surveys flows on a live PostHog instance.
 
 ![Compiled UC-3 one-pager skill in the leaderboard drawer](images/skill-drawer-uc3.png)
@@ -17,6 +23,8 @@ Five blinded agents ran against a local PostHog devbox. Each agent got only its 
 | `UC-4` | [`uc-implement-custom-survey-ui.md`](skills/uc-implement-custom-survey-ui.md) | Build a custom Survey UI with `getActiveMatchingSurveys` and manual events | Pass | Custom card rendered live, `/stats/` showed `Shown 2`, `Responses 1 (50%)`, `Dismissed 1 (50%)` |
 | `UC-5` + `UC-12` | [`uc-send-responses-to-slack-and-webhooks.md`](skills/uc-send-responses-to-slack-and-webhooks.md), [`uc-test-survey-notification-with-last-response.md`](skills/uc-test-survey-notification-with-last-response.md) | Create a Webhook notification and click `Send test` with last response | Pass | Matched `UC-1`'s real response and succeeded (`HTTP 200` in `120ms`) |
 | `UC-8` | [`uc-run-recurring-nps-with-response-cap.md`](skills/uc-run-recurring-nps-with-response-cap.md) | Launch a recurring 0-10 NPS survey (`3` runs x `30` days, cap `5`) and submit `9` | Pass | Verified 3 start dates 30 days apart, live 0-10 popover, and NPS score `100` |
+
+**PoC note:** These five devbox passes and the screenshots below only show early output. Complete skills still depend on full SDK indexing, crawling and splitting fixes, and tuned extraction.
 
 ## 1. `UC-1`: Launch a first popover survey
 

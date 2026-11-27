@@ -1,5 +1,11 @@
 # Addendum 3: Surveys catalog, pins, and compiled skills
 
+> [!NOTE]
+> **PoC results aren't final.** These catalog counts, SDK matrix cells, and compiled skills test whether the concept is valuable, rather than whether it's production-ready. Solid numbers and mappings still need:
+> - **All SDKs and services indexed.** PostHog products intersect across repo and product boundaries, so partial indexes miss real behavior.
+> - **Crawling, splitting, and mapping fixed.** All three stages still have remaining bugs.
+> - **Retrieval, extraction, and verification optimized.** Each still needs substantial work.
+
 Our Surveys experiment indexed 2,548 code symbols across 5 repos, built a coded catalog, generated the SDK feature support matrix, and compiled 15 self-contained skills.
 
 ## What the pipeline indexed
@@ -24,6 +30,8 @@ Chapters (`SV-0..SV-8`), sections (`SV-x.y`), and use cases (`UC-1..UC-15`) grou
 | Mapped live docs claims | `SV-<SURF>-C-*` | 725 |
 | Recorded editorial decisions | `SV-ALL-D-*` | 21 |
 
+**PoC note:** These symbol, port, and catalog counts aren't final. They come from a partial index, before crawling and mapping fixes and extraction tuning.
+
 ### Generated SDK feature matrix
 
 Missing capabilities on an SDK show up as explicit gaps instead of silent omissions. This same data generated `/docs/surveys/sdk-feature-support` and fixed 20 dead links on `master`:
@@ -43,6 +51,8 @@ Missing capabilities on an SDK show up as explicit gaps instead of silent omissi
 | `SV-5.2` Match users and show popovers | Yes | Yes | Yes | Yes | Yes |
 | `SV-5.3` Submit responses and partial answers | Yes | Yes | Yes | Yes | Yes |
 | `SV-5.4` Dismissals, page-unload abandonment, SDK reset | Yes | Yes | Yes | Yes | Yes |
+
+**PoC note:** This matrix is an early draft, rather than a final parity reference. Partial indexes, crawling and mapping bugs, and unoptimized extraction still leave gaps.
 
 ## Compiled one-pager skills (`UC-1..UC-15`)
 
@@ -66,6 +76,8 @@ Every use case compiles into one standalone Markdown file, and an automated chec
 | `UC-14` Trigger survey via Workflow Show Survey | Code gap | 6,625 | 13 | 663 | 1,010 | 0 |
 | `UC-15` Duplicate across projects and archive responses | Code gap | 6,689 | 11 | 676 | 897 | 0 |
 | **Total** | | | | | **13,638** | **0** |
+
+**PoC note:** These line and fact counts come from rough draft skills, rather than final ones. Full cross-repo indexing, splitting fixes, and retrieval tuning will change them.
 
 ## Details and stuff
 

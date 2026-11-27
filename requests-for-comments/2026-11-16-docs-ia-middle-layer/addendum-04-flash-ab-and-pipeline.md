@@ -1,5 +1,11 @@
 # Addendum 4: Controlled `flash` A/B test and pointing-and-calling
 
+> [!NOTE]
+> **PoC results aren't final.** This `flash` A/B run tests whether the concept is valuable, rather than whether it's production-ready. Solid numbers and mappings still need:
+> - **All SDKs and services indexed.** PostHog products intersect across repo and product boundaries, so partial indexes miss real behavior.
+> - **Crawling, splitting, and mapping fixed.** All three stages still have remaining bugs.
+> - **Retrieval, extraction, and verification optimized.** Each still needs substantial work.
+
 This addendum backs two parts of the [main RFC](2026-11-16-docs-ia-middle-layer.md):
 
 1. A controlled test of `flash` (a fast, low-cost model) auditing Surveys docs **without** vs **with** derived knowledge.
@@ -35,6 +41,8 @@ Each arm got different inputs:
 | Mobile partial responses | **1 / 4 SDKs** (React Native only) | **4 / 4 SDKs** | Caught all 4 |
 | Affected docs and snippets | 15 files | 18 files | +3 files |
 | `destinations.mdx` audit | Missed 2 existing bugs | Caught both existing bugs | +2 bugs |
+
+**PoC note:** This single-run A/B is an early concept check, rather than a final benchmark. Partial indexing, mapping bugs, and untuned retrieval and verification still affect the numbers.
 
 ### Why raw-repo `flash` failed
 

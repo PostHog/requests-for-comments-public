@@ -1,5 +1,11 @@
 # Addendum 2: Live docs mapping and contradiction proof
 
+> [!NOTE]
+> **PoC results aren't final.** These coverage numbers, mappings, and screenshots test whether the concept is valuable, rather than whether it's production-ready. Solid numbers and mappings still need:
+> - **All SDKs and services indexed.** PostHog products intersect across repo and product boundaries, so partial indexes miss real behavior.
+> - **Crawling, splitting, and mapping fixed.** All three stages still have remaining bugs.
+> - **Retrieval, extraction, and verification optimized.** Each still needs substantial work.
+
 We mapped all 34 live Surveys pages on `posthog.com` against pinned Surveys code across 5 repos (`posthog`, `posthog-js`, `posthog-ios`, `posthog-android`, and `posthog-flutter`).
 
 ## Coverage scorecard
@@ -22,6 +28,8 @@ The mapper split the 34 pages into 1,206 pieces: 729 non-structural pieces and 4
 
 ![PostHog 3000 Docs leaderboard showing Surveys metrics and accuracy bar](images/leaderboard-overview.png)
 
+**PoC note:** These scorecard numbers and the leaderboard screenshot aren't final. Missing SDK and service indexes, mapping bugs, and untuned extraction and verification still shift these numbers.
+
 ### Coverage by surface
 
 | Surface | Public units | Covered (1-hop) | Covered (via procedures) | Public lines | Line coverage (1-hop) |
@@ -41,9 +49,13 @@ Each page also renders in a side-panel viewer showing claim states and clickable
 
 ![Real posthog.com Creating surveys page with claim-state side panel](images/annotate-real-site.png)
 
+**PoC note:** These per-surface numbers and side-panel states are rough snapshots, rather than final coverage. Partial indexes, splitting and mapping bugs, and unoptimized retrieval still skew them.
+
 ## 17 confirmed contradictions
 
 A second-pass judge read the full source symbol for every row below before flagging it. The 7-PR Surveys docs stack (`#22896` to `#22902`) fixes all 17.
+
+**PoC note:** Each row below matches pinned code, though the total count isn't final. Full cross-repo indexing, crawling and mapping fixes, and verification tuning will still change that count.
 
 | Doc piece | What the doc claimed | Source code proving it wrong | Pin (`commit-md5`) |
 |---|---|---|---|

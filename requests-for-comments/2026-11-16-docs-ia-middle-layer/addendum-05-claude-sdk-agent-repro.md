@@ -1,5 +1,11 @@
 # Addendum 5: Two-arm PR maintenance replay (`mcp-analytics`)
 
+> [!NOTE]
+> **PoC results aren't final.** This replay scorecard and its charts test whether the concept is valuable, rather than whether it's production-ready. Solid numbers and mappings still need:
+> - **All SDKs and services indexed.** PostHog products intersect across repo and product boundaries, so partial indexes miss real behavior.
+> - **Crawling, splitting, and mapping fixed.** All three stages still have remaining bugs.
+> - **Retrieval, extraction, and verification optimized.** Each still needs substantial work.
+
 An active Docs IA kept a PR-triggered docs agent more accurate over two months of real code changes. It cut false-positive edits in half and left less drift on disk.
 
 ## What we tested
@@ -38,6 +44,8 @@ Across all 50 code PRs, the IA-assisted agent made fewer bad edit calls, picked 
 | **Live factual checks passing at PR 50** | `82.9%` (`34/41`) | `82.9%` (`34/41`) | `0` |
 | **Average wall time per PR** | `11.4s` | `17.9s` | `+6.5s` |
 
+**PoC note:** These scorecard numbers and the three charts below only cover one product, so they aren't final. Cross-repo indexing, crawling and mapping fixes, and retrieval, extraction, and verification tuning aren't done yet.
+
 The IA-assisted agent held `100%` PR decision accuracy for the first 14 PRs and stayed 4 to 11 points ahead through PR 50 (finishing `+8.0` points ahead).
 
 ![Cumulative PR decision accuracy over 50 chronological PRs](images/addendum-05/cumulative-pr-accuracy-over-prs.png)
@@ -58,6 +66,8 @@ On October 3, the IA started with `2,080` code-pinned facts (`0` WebMCP, `0` Rus
 - **Mapped `56` new facts** into the live IA, growing WebMCP from `0` to `4` (`posthog-js#5191`) and the new Rust SDK from `0` to `11` (`posthog-rs#308`, `#333`).
 - **Updated or minted `76` claim bindings** alongside `.mdx` edits, ending with `2,093` live facts, `502` live claims, and `73` retired tombstones.
 - **Zero-LLM gates:** Skipped `4` non-doc PRs (two unreleased feature flags, an offline eval runner, a frontend refactor) and reconciled all `3` human `.mdx` PRs (auto-retiring `7` claims when `#21548` deleted `surfaces/desktop.mdx`).
+
+**PoC note:** These maintenance counts come from a single-product replay, rather than a production index. Cross-repo indexing, mapping fixes, and extraction and verification tuning haven't happened yet.
 
 ## Concrete examples
 

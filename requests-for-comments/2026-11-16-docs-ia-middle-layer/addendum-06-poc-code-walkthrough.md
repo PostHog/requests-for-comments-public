@@ -1,5 +1,11 @@
 # Addendum 6: How the PoC code works
 
+> [!NOTE]
+> **PoC results aren't final.** This code stack tests whether the concept is valuable, rather than whether it's production-ready. Solid numbers and mappings still need:
+> - **All SDKs and services indexed.** PostHog products intersect across repo and product boundaries, so partial indexes miss real behavior.
+> - **Crawling, splitting, and mapping fixed.** All three stages still have remaining bugs.
+> - **Retrieval, extraction, and verification optimized.** Each still needs substantial work.
+
 The PoC lives in a 5-PR draft stack in `PostHog/context-mill` (`#571` to `#575`) under `scripts/docs-ia/` and `facts/`:
 
 1. [`#571`](https://github.com/PostHog/context-mill/pull/571): Core data models, JSON schemas, shared prompts, and `facts/*.yml` product configs (+1.8K lines).
@@ -49,6 +55,8 @@ Across PRs [`#571`](https://github.com/PostHog/context-mill/pull/571) to [`#575`
 - **Working now:** All five workflows, the stateful read/write IA engine, deterministic models and tools, the step-scoped MCP server, and CLI lookup (`pnpm docs-ia query`) are wired up. All 26 unit tests (`pnpm test:docs-ia`, 0 LLM calls) pass.
 - **Partial data migration:** `facts/registers/mcp-analytics/` holds real replay registers and scorecards. The earlier Surveys artifacts still live in local experiment scripts until we migrate them cleanly.
 - **Local CLI only:** Nothing is wired into GitHub Actions, webhooks, or `products/knowledge_writer`.
+
+**PoC note:** Unit tests and local runs check the prototype harness, rather than production readiness. Cross-repo indexing, crawling and mapping fixes, and retrieval, extraction, and verification tuning still aren't done.
 
 ## Details and stuff
 
