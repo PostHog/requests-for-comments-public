@@ -319,7 +319,7 @@ Two identical read-only `flash` agents ran the same 3-part Surveys audit against
 
 - **Raw repos only:** Opened **35 files** across **123 tool calls** (`468K` tokens, `6.5 min`). Missed the `posthogsurveys.com` domain bug, **3 of 4 mobile SDKs**, 3 affected doc files, and 2 existing bugs.
 - **With derived knowledge:** Opened **66% fewer files (`12`)**, used **40% fewer tokens (`280K`)**, and finished **25% faster (`4.8 min`)**. Caught all 4 mobile SDKs, every affected page, and every existing bug.
-- **Remaining gap:** Still spent 33 turns querying raw `1.1 MB` JSON files with ad-hoc scripts. A thin lookup CLI fixes that.
+- **Remaining gap:** Still spent 33 turns querying raw `1.1 MB` JSON files with ad-hoc scripts. We now build a zero-dep local `facts.sqlite` index ([`facts-sqlite.mjs`](https://github.com/PostHog/context-mill/pull/572/files#diff-044c31dcaebddc012161de680118fdf2b280a040e47775a06829a350dab2dfd9)) alongside the files using SQLite FTS5 BM25 (`140.8ms` 5,000-fact roundtrip, `2.89ms/query`).
 
 **PoC note:** This single A/B run isn't a final benchmark. The numbers come from a partial index with unfixed mapping bugs and untuned retrieval and verification.
 
@@ -340,7 +340,7 @@ Continuous maintenance against fast-moving code is hard. Phase 1 pays off before
 A product's IA exposes contradictions, SDK parity gaps, and undocumented workflows that existing review loops miss. Our Surveys POC experiment produced:
 
 1. **Surface-coded IA across 5 repos.** `2,548` verified symbol anchors across `posthog`, `posthog-js`, `posthog-ios`, `posthog-android`, and `posthog-flutter`, 3 shared `platform-*` seams, `62` procedures across 8 surfaces, and `15` compiled one-pager skills.
-2. **Live docs map and coverage leaderboard ([docs-coverage.hosthog.dev](https://docs-coverage.hosthog.dev/#leaderboard)).** All 34 Surveys pages on `posthog.com` `master`: `59%` unit coverage, `56%` 1-hop line coverage, `61%` accuracy, `17` confirmed contradictions, and `0` false positives.
+2. **Live docs map and coverage leaderboard ([docs-coverage.hosthog.dev](https://docs-coverage.hosthog.dev/#leaderboard)).** All 34 Surveys pages on `posthog.com` `master` hit `80%` accuracy (`433/541` checkable claims fresh, with `171` `unverified` screenshots and third-party snippets excluded from the denominator and shown separately), `59%` unit coverage, `56%` 1-hop line coverage, `17` confirmed contradictions, and `0` false positives. The live leaderboard now covers 7 products (`Endpoints`, `Business Knowledge`, `MCP Analytics`, `Surveys`, `Support`, `Replay Vision`, `Tracing`) at `75%` to `89%` accuracy, backed by a local `27,509`-fact combined `facts.sqlite`.
 3. **7-PR Surveys docs and evals stack (`#22896` to `#22902`).** Fixes all 17 contradictions, adds the generated SDK parity matrix, documents missing API/MCP/Workflow surfaces, and adds 11 executable `.eval.yaml` suites.
 4. **Tracing docs from IA gaps.** The IA pays off as a simple gap-finder. The distributed tracing run resulted in [`PostHog/posthog.com#22945`](https://github.com/PostHog/posthog.com/pull/22945). By first mapping out behavior, it helps the agent create more structured PRs, aggregated by the natural surface they occupy, like API, MCP, search, SQL, etc.
 

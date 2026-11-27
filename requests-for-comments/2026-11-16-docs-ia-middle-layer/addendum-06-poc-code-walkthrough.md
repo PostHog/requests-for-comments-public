@@ -9,7 +9,7 @@
 The PoC lives in a 5-PR draft stack in `PostHog/context-mill` (`#571` to `#575`) under `scripts/docs-ia/` and `facts/`:
 
 1. [`#571`](https://github.com/PostHog/context-mill/pull/571): Core data models, JSON schemas, shared prompts, and `facts/*.yml` product configs (+1.8K lines).
-2. [`#572`](https://github.com/PostHog/context-mill/pull/572): Deterministic tools, Tree-sitter pins, and step-scoped MCP server (+2.0K lines).
+2. [`#572`](https://github.com/PostHog/context-mill/pull/572): Deterministic tools, Tree-sitter pins (including Go, Ruby, PHP, and C# grammars), MDX `<Steps>` fence-inversion fix, zero-dep SQLite FTS5 index ([`facts-sqlite.mjs`](https://github.com/PostHog/context-mill/pull/572/files#diff-044c31dcaebddc012161de680118fdf2b280a040e47775a06829a350dab2dfd9)), and step-scoped MCP server (+3.1K lines).
 3. [`#573`](https://github.com/PostHog/context-mill/pull/573): Workflow runner, `pnpm docs-ia` CLI, and 4 core workflows (+1.8K lines).
 4. [`#574`](https://github.com/PostHog/context-mill/pull/574): Claude Code SDK adapter, stateful read/write IA engine, and PR replay workflows (+6.5K lines).
 5. [`#575`](https://github.com/PostHog/context-mill/pull/575): Generated `facts/registers/mcp-analytics/*.json` registers and replay scorecards (+22.9K lines, data only).
@@ -47,12 +47,12 @@ When an `agentStep` runs:
 Across PRs [`#571`](https://github.com/PostHog/context-mill/pull/571) to [`#575`](https://github.com/PostHog/context-mill/pull/575), everything fits in three buckets:
 
 - **`facts/` (data only):** Pinned repo commits (`repos.yml`), closed product/surface lists (`registries.yml`), per-product repo scopes and exclusions (`products/*.yml`), and permanent registers/scorecards (`registers/mcp-analytics/`).
-- **`scripts/docs-ia/models/` and `tools/` (deterministic code):** `models/` holds detached `{ commit, code_hash }` pins, 13 fact types, 10 port kinds, the quote gate, claim states, and the append-only register with tombstones. `tools/` holds the Tree-sitter indexer, 0-LLM port linker, MDX splitter and reconciler, blast-radius walker, and skill compiler.
+- **`scripts/docs-ia/models/` and `tools/` (deterministic code):** `models/` holds detached `{ commit, code_hash }` pins, 13 fact types, 10 port kinds, the quote gate, claim states, and the append-only register with tombstones. `tools/` holds the Tree-sitter indexer (with Go, Ruby, PHP, and C# grammars), 0-LLM port linker, MDX splitter (with `<Steps>` wrapper fence-inversion fix) and reconciler, zero-dep SQLite FTS5 BM25 index (`facts-sqlite.mjs`), blast-radius walker, and skill compiler.
 - **`scripts/docs-ia/workflows/`, `prompts/`, and `runtime/` (orchestration):** The five workflow DAGs, shared Markdown prompts, runner, provider adapters, and CLI (`cli.mjs`).
 
 ## 4. What's working vs what's still rough
 
-- **Working now:** All five workflows, the stateful read/write IA engine, deterministic models and tools, the step-scoped MCP server, and CLI lookup (`pnpm docs-ia query`) are wired up. All 26 unit tests (`pnpm test:docs-ia`, 0 LLM calls) pass.
+- **Working now:** All five workflows, the stateful read/write IA engine, deterministic models and tools, the local `facts.sqlite` FTS5 index, the step-scoped MCP server, and CLI lookup (`pnpm docs-ia query`) are wired up. All 31 unit tests (`pnpm test:docs-ia`, 0 LLM calls) pass.
 - **Partial data migration:** `facts/registers/mcp-analytics/` holds real replay registers and scorecards. The earlier Surveys artifacts still live in local experiment scripts until we migrate them cleanly.
 - **Local CLI only:** Nothing is wired into GitHub Actions, webhooks, or `products/knowledge_writer`.
 
@@ -66,7 +66,7 @@ Across PRs [`#571`](https://github.com/PostHog/context-mill/pull/571) to [`#575`
 ### Quick commands (from `PostHog/context-mill` branch `vincent/docs-ia-5-mcpa-data`)
 
 ```bash
-# Run the deterministic unit test suite (6 files, 26 tests, 0 LLM calls)
+# Run the deterministic unit test suite (7 files, 31 tests, 0 LLM calls)
 pnpm test:docs-ia
 
 # List every workflow, step order, model, prompt, schema, and bound MCP tools
@@ -88,10 +88,10 @@ pnpm docs-ia mcp-serve --tools read_pinned_slice,verify_verbatim_quote --state <
 ### Stack commits
 
 - `0fe62fee` ([`#571`](https://github.com/PostHog/context-mill/pull/571), `vincent/docs-ia-1-models`): Core models, JSON schemas, shared prompts, `facts/*.yml`, `models.test.mjs` (7/7 tests).
-- `9de4cb0e` ([`#572`](https://github.com/PostHog/context-mill/pull/572), `vincent/docs-ia-2-tools`): Deterministic tools (`ast-pins`, `tree-sitter-parser`, `port-linker`, `mdx-splitter`, `blast-radius`, `skill-compiler`, `catalog`, `mcp-server`) and `prompts-and-tools.test.mjs` (13/13 tests).
-- `56fc6d1e` ([`#573`](https://github.com/PostHog/context-mill/pull/573), `vincent/docs-ia-3-workflows`): Workflow runner, `cli.mjs`, 4 core workflows (`build-ia`, `map-docs`, `refresh-drift`, `compile-skills`), `README.md`, and `workflows.test.mjs` (16/16 tests).
-- `b10a34a7` ([`#574`](https://github.com/PostHog/context-mill/pull/574), `vincent/docs-ia-4-replay-and-claude-sdk`): Claude Code SDK adapter, `replay-prs.workflow.mjs`, stateful read/write IA engine (`stateful-ia-engine.mjs`), 8-week replay benchmark (`stateful-8wk-benchmark.mjs`), and tests (26/26 docs-ia tests).
-- `a20063d9` ([`#575`](https://github.com/PostHog/context-mill/pull/575), `vincent/docs-ia-5-mcpa-data`): Generated `facts/registers/mcp-analytics/*.json` registers and scorecards including `stateful-8wk-scorecard.json` (37/37 test files, 481/481 tests).
+- `b61a165f` ([`#572`](https://github.com/PostHog/context-mill/pull/572), `vincent/docs-ia-2-tools`): Deterministic tools (`ast-pins`, `tree-sitter-parser` with Go/Ruby/PHP/C# grammars, `port-linker`, `mdx-splitter` with `<Steps>` fence-inversion fix, `blast-radius`, `skill-compiler`, [`facts-sqlite.mjs`](https://github.com/PostHog/context-mill/pull/572/files#diff-044c31dcaebddc012161de680118fdf2b280a040e47775a06829a350dab2dfd9), `catalog`, `mcp-server`), `prompts-and-tools.test.mjs`, and [`facts-sqlite.test.mjs`](https://github.com/PostHog/context-mill/pull/572/files#diff-784dea33d8e8cc22a057087c5403e71fba6df006e306890551a8dad5b95f54c4) (18/18 tests).
+- `98d3288c` ([`#573`](https://github.com/PostHog/context-mill/pull/573), `vincent/docs-ia-3-workflows`): Workflow runner, `cli.mjs`, 4 core workflows (`build-ia`, `map-docs`, `refresh-drift`, `compile-skills`), `README.md`, and `workflows.test.mjs` (21/21 tests).
+- `0edce93b` ([`#574`](https://github.com/PostHog/context-mill/pull/574), `vincent/docs-ia-4-replay-and-claude-sdk`): Claude Code SDK adapter, `replay-prs.workflow.mjs`, stateful read/write IA engine (`stateful-ia-engine.mjs`), 8-week replay benchmark (`stateful-8wk-benchmark.mjs`), and tests (31/31 docs-ia tests).
+- `dfff157f` ([`#575`](https://github.com/PostHog/context-mill/pull/575), `vincent/docs-ia-5-mcpa-data`): Generated `facts/registers/mcp-analytics/*.json` registers, `facts/products/mcp-analytics.yml` updates, and scorecards including `stateful-8wk-scorecard.json` (38/38 test files, 486/486 tests).
 
 ### Key file map
 
@@ -108,9 +108,9 @@ scripts/docs-ia/
 ├── workflows/{index,build-ia,map-docs,refresh-drift,replay-prs,compile-skills}.workflow.mjs + stateful-8wk-benchmark.mjs
 ├── models/{pin,fact,claim,register,workflow}.mjs + schemas/*.schema.json
 ├── prompts/{loader.mjs,shared/*.md,*.md}
-├── tools/{catalog,mcp-server,ast-pins,tree-sitter-parser,port-linker,mdx-splitter,blast-radius,skill-compiler}.mjs
+├── tools/{catalog,mcp-server,ast-pins,tree-sitter-parser,port-linker,mdx-splitter,facts-sqlite,blast-radius,skill-compiler}.mjs
 ├── runtime/{runner,agent-adapter,claude-sdk-adapter,stateful-ia-engine,git}.mjs
-└── tests/{models,prompts-and-tools,workflows,tree-sitter-and-replay,claude-sdk-adapter,stateful-ia-engine}.test.mjs
+└── tests/{models,prompts-and-tools,facts-sqlite,workflows,tree-sitter-and-replay,claude-sdk-adapter,stateful-ia-engine}.test.mjs
 ```
 
 ### Adding a new product

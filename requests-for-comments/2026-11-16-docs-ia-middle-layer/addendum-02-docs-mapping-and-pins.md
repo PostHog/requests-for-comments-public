@@ -16,7 +16,7 @@ The mapper split the 34 pages into 1,206 pieces: 729 non-structural pieces and 4
 |---|---|---|
 | Pages audited | 34 | All live Surveys docs, including imported onboarding snippets |
 | Total pieces | 1,206 | 729 non-structural pieces + 477 structural pieces |
-| `fresh` | 433 (61% accuracy) | Verified against code (`433/712` checkable pieces, 50 with minor caveats) |
+| `fresh` | 433 (80% accuracy) | Verified against code (`433/541` checkable pieces, 50 with minor caveats, excluding `171` `unverified` pieces shown separately) |
 | `contradicted` | 17 | Confirmed by the second-pass judge, 0 false positives |
 | `stale` | 17 | Outdated wording or drift flagged without direct contradiction |
 | `prose-backed` | 7 | Backed only by spec prose, kept separate from `fresh` |
