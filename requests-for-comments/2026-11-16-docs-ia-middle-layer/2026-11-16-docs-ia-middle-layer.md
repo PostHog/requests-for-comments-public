@@ -41,7 +41,8 @@
   - [8.2 Early signal: 8-week stateful PR maintenance replay (`mcp-analytics`)](#82-early-signal-8-week-stateful-pr-maintenance-replay-mcp-analytics)
 - [9. Scope and Phase 1 payoff](#9-scope-and-phase-1-payoff)
   - [9.1 Out of scope for Phase 1](#91-out-of-scope-for-phase-1)
-- [10. POC addendums](#10-poc-addendums)
+- [10. Alternatives considered](#10-alternatives-considered)
+- [11. POC addendums](#11-poc-addendums)
 
 ## 1. Problem statement
 
@@ -341,6 +342,7 @@ A product's IA exposes contradictions, SDK parity gaps, and undocumented workflo
 1. **Surface-coded IA across 5 repos.** `2,548` verified symbol anchors across `posthog`, `posthog-js`, `posthog-ios`, `posthog-android`, and `posthog-flutter`, 3 shared `platform-*` seams, `62` procedures across 8 surfaces, and `15` compiled one-pager skills.
 2. **Live docs map and coverage leaderboard ([docs-coverage.hosthog.dev](https://docs-coverage.hosthog.dev/#leaderboard)).** All 34 Surveys pages on `posthog.com` `master`: `59%` unit coverage, `56%` 1-hop line coverage, `61%` accuracy, `17` confirmed contradictions, and `0` false positives.
 3. **7-PR Surveys docs and evals stack (`#22896` to `#22902`).** Fixes all 17 contradictions, adds the generated SDK parity matrix, documents missing API/MCP/Workflow surfaces, and adds 11 executable `.eval.yaml` suites.
+4. **Tracing docs from IA gaps.** The IA pays off as a simple gap-finder. The distributed tracing run resulted in [`PostHog/posthog.com#22945`](https://github.com/PostHog/posthog.com/pull/22945). By first mapping out behavior, it helps the agent create more structured PRs, aggregated by the natural surface they occupy, like API, MCP, search, SQL, etc.
 
 **PoC note:** Surveys crosses unindexed SDK and service boundaries, so these numbers aren't final. Crawling and splitting bugs plus untuned retrieval, extraction, and verification still affect them.
 
@@ -356,7 +358,16 @@ If maintenance stays cheap, Phase 2 integrates this data and claim tools into PR
 - Rendering related pages and prerequisites directly on docs pages from the IA.
 - Higher-level `/learn` content and tutorials written separately for humans.
 
-## 10. POC addendums
+## 10. Alternatives considered
+
+- **Just use a stronger frontier agent.** Accuracy is still an issue because some behavior is hard to trace across SDKs, async events, and flags without a map. Cost adds up fast too if you run max-effort models on every PR and audit.
+- **Let end-user agents read our open-source code directly.** That forces every user's agent to repeatedly recrawl our codebase from scratch on every session. It burns their tokens and isn't useful when we can do that work once on our side.
+- **Skip the docs map and generate docs straight from code.** Docs aren't a 1-to-1 mirror of code. We often emphasize some workflows and steer users away from others for product reasons, like encouraging them to filter errors before sending them to PostHog to keep ingestion cheaper. An agent has a hard time piecing that product intent together without a system to record it.
+- **Stateless PR bots (Inkeep and raw-diff agents).** Without commit-pinned claims, bots miss indirect drift, overwrite prior editorial choices, and can't tell which commit a page is still accurate against. In our 8-week replay, the stateless baseline also opened twice as many false-positive PRs.
+- **Scheduled full recrawls or giant unsliced dumps.** Re-crawling whole repos on a schedule doesn't scale, and dumping every surface into one file bloats context until agents lose accuracy.
+- **Auto-publishing straight from raw `master` facts.** Without enclosing feature flags and Cloud/AI gates, raw code facts treat unshipped UI as GA (which hit us on the Surveys stack).
+
+## 11. POC addendums
 
 POC evidence lives in this folder. All six addendums test whether the concept is valuable, rather than whether it's production-ready:
 
